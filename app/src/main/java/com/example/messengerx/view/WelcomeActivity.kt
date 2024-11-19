@@ -78,7 +78,6 @@ class WelcomeActivity : ComponentActivity() {
         startActivity(intent)
     }
 }
-
 @Composable
 fun WelcomeScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
     Column(
