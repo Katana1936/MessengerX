@@ -79,8 +79,6 @@ class WelcomeActivity : ComponentActivity() {
     }
 }
 
-
-
 @Composable
 fun WelcomeScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
     Column(
