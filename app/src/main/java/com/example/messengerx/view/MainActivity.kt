@@ -1,4 +1,4 @@
-package com.example.messengerx
+package com.example.messengerx.view
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
