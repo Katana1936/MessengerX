@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -97,13 +98,13 @@ fun WelcomeScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
-                .blur(10.dp)
-                .background(Color(0xB3FFFFFF)), // Используем прозрачность 70%
+                .background(Color.Transparent)
+                .alpha(0.7f), // Прозрачность для фона кнопки
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent,
+                containerColor = Color(0x80FFFFFF), // Полупрозрачный цвет для выделения кнопки
                 contentColor = Color.White
             ),
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(20.dp), // Закругленные углы для более мягкого внешнего вида
             elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
         ) {
             Text(
@@ -124,13 +125,13 @@ fun WelcomeScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
-                .blur(10.dp)
-                .background(Color(0xB3FFFFFF)), // Используем прозрачность 70%
+                .background(Color.Transparent)
+                .alpha(0.7f), // Прозрачность для фона кнопки
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent,
+                containerColor = Color(0x80FFFFFF), // Полупрозрачный цвет для выделения кнопки
                 contentColor = Color.White
             ),
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(20.dp), // Закругленные углы для более мягкого внешнего вида
             elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
         ) {
             Text(
