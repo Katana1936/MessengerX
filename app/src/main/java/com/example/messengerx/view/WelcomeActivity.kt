@@ -15,8 +15,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -67,6 +67,53 @@ class WelcomeActivity : ComponentActivity() {
 }
 
 @Composable
+fun GradientBlurButton(onClick: () -> Unit, text: String) {
+    Box(
+        contentAlignment = Alignment.Center, // Центрирование текста внутри кнопки
+        modifier = Modifier
+            .fillMaxWidth(0.8f) // Ограничиваем ширину кнопки до 80% от экрана
+            .height(50.dp)
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(25.dp)) // Закругляем углы самого контейнера Box
+    ) {
+        // Блюр-слой, который находится под кнопкой и создаёт эффект стекла
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .blur(15.dp) // Размытие для эффекта стекла
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color(0x802BE4DC), // Используем прозрачные цвета для эффекта стекла
+                            Color(0x80243484),
+                            Color(0x80EEAAEE)
+                        )
+                    ),
+                    shape = RoundedCornerShape(25.dp) // Закругленные края фона кнопки
+                )
+        )
+
+        // Кнопка с текстом, которая не размывается
+        Button(
+            onClick = onClick,
+            modifier = Modifier
+                .matchParentSize(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent, // Используем прозрачный цвет контейнера
+                contentColor = Color.White
+            ),
+            shape = RoundedCornerShape(25.dp),
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+        ) {
+            Text(
+                text = text,
+                color = Color.White
+            )
+        }
+    }
+}
+
+@Composable
 fun WelcomeScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
     Column(
         modifier = Modifier
@@ -93,26 +140,8 @@ fun WelcomeScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
             color = Color.White
         )
         Spacer(modifier = Modifier.height(15.dp))
-        Button(
-            onClick = onLoginClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-                .background(Color.Transparent)
-                .alpha(0.7f), // Прозрачность для фона кнопки
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0x80FFFFFF), // Полупрозрачный цвет для выделения кнопки
-                contentColor = Color.White
-            ),
-            shape = RoundedCornerShape(20.dp), // Закругленные углы для более мягкого внешнего вида
-            elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
-        ) {
-            Text(
-                text = "Увійти",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.White
-            )
-        }
+
+        GradientBlurButton(onClick = onLoginClick, text = "Увійти")
         Spacer(modifier = Modifier.height(10.dp))
         Text(
             text = "або",
@@ -120,26 +149,8 @@ fun WelcomeScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
             color = Color.White
         )
         Spacer(modifier = Modifier.height(10.dp))
-        Button(
-            onClick = onRegisterClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-                .background(Color.Transparent)
-                .alpha(0.7f), // Прозрачность для фона кнопки
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0x80FFFFFF), // Полупрозрачный цвет для выделения кнопки
-                contentColor = Color.White
-            ),
-            shape = RoundedCornerShape(20.dp), // Закругленные углы для более мягкого внешнего вида
-            elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
-        ) {
-            Text(
-                text = "Зареєструватись",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.White
-            )
-        }
+
+        GradientBlurButton(onClick = onRegisterClick, text = "Зареєструватись")
     }
 }
 
