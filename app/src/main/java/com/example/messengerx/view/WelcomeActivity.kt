@@ -44,7 +44,7 @@ class WelcomeActivity : ComponentActivity() {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(largeRadialGradient)
+                        .background(largeRadialGradient) // Применение градиента для фона
                 ) {
                     WelcomeScreen(
                         onLoginClick = { navigateToLogin() },
