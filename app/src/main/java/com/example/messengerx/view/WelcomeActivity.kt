@@ -1,5 +1,6 @@
 package com.example.messengerx.view
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -8,11 +9,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -25,7 +23,9 @@ import androidx.compose.ui.unit.dp
 import com.example.messengerx.ui.theme.MessengerXTheme
 import com.example.messengerx.view.login.LoginActivity
 import com.example.messengerx.view.registration.RegistrationActivity
+import kotlinx.coroutines.delay
 
+// Определение градиента для фона
 val largeRadialGradient = Brush.radialGradient(
     colors = listOf(
         Color(0xFF2BE4DC),
@@ -38,28 +38,53 @@ val largeRadialGradient = Brush.radialGradient(
 class WelcomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge() // Включение режима Edge-to-Edge
+
         setContent {
             MessengerXTheme {
+                // Получение ссылки на текущую активность
+                val activity = this@WelcomeActivity
+
+                // LaunchedEffect для проверки состояния входа после задержки
+                LaunchedEffect(Unit) {
+                    delay(1500) // Задержка для демонстрации сплэш-экрана
+                    val sharedPref = activity.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                    val isLoggedIn = sharedPref.getBoolean("is_logged_in", false)
+                    if (isLoggedIn) {
+                        activity.navigateToMain()
+                    }
+                }
+
+                // Отображение WelcomeScreen только если пользователь не вошел
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(largeRadialGradient) // Применение градиента для фона
+                        .background(largeRadialGradient)
                 ) {
                     WelcomeScreen(
-                        onLoginClick = { navigateToLogin() },
-                        onRegisterClick = { navigateToRegistration() }
+                        onLoginClick = { activity.navigateToLogin() },
+                        onRegisterClick = { activity.navigateToRegistration() }
                     )
                 }
             }
         }
     }
 
+    // Функция для перехода на главный экран
+    private fun navigateToMain() {
+        val intent = Intent(this, MainActivity::class.java)
+        // Закрываем все предыдущие активности
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+    }
+
+    // Функция для перехода на экран входа
     private fun navigateToLogin() {
         val intent = Intent(this, LoginActivity::class.java)
         startActivity(intent)
     }
 
+    // Функция для перехода на экран регистрации
     private fun navigateToRegistration() {
         val intent = Intent(this, RegistrationActivity::class.java)
         startActivity(intent)
@@ -141,6 +166,7 @@ fun WelcomeScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
         )
         Spacer(modifier = Modifier.height(15.dp))
 
+        // Кнопка "Увійти" с переходом на LoginActivity
         GradientBlurButton(onClick = onLoginClick, text = "Увійти")
         Spacer(modifier = Modifier.height(10.dp))
         Text(
@@ -150,6 +176,7 @@ fun WelcomeScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
         )
         Spacer(modifier = Modifier.height(10.dp))
 
+        // Кнопка "Зареєструватись" с переходом на RegistrationActivity
         GradientBlurButton(onClick = onRegisterClick, text = "Зареєструватись")
     }
 }

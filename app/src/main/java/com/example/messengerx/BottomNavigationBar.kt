@@ -7,11 +7,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -22,19 +18,18 @@ import dev.chrisbanes.haze.hazeChild
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 
-
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 fun BottomNavigationBar(
     hazeState: HazeState,
     modifier: Modifier = Modifier,
     onItemSelected: (String) -> Unit = {}
-) {
 
-    var selectedItem by remember { mutableStateOf(2) }
+) {
+    var selectedItem by remember { mutableStateOf(2) } // "Чаты" по умолчанию
 
     val items = listOf("Контакты", "Аккаунт", "Чаты", "Настройки")
-    val selectedListener = listOf(
+    val selectedIcons = listOf(
         painterResource(id = R.drawable.ic_contact),
         painterResource(id = R.drawable.ic_account),
         painterResource(id = R.drawable.ic_chat),
@@ -46,7 +41,6 @@ fun BottomNavigationBar(
         painterResource(id = R.drawable.ic_chat),
         painterResource(id = R.drawable.ic_settings)
     )
-
     val hazeStyle = HazeMaterials.ultraThin()
 
     NavigationBar(
@@ -79,9 +73,9 @@ fun BottomNavigationBar(
                     onItemSelected(item)
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = white,
+                    selectedIconColor = burned_blue,
                     unselectedIconColor = white,
-                    selectedTextColor = white,
+                    selectedTextColor = burned_blue,
                     indicatorColor = burned_blue,
                     unselectedTextColor = white
                 )

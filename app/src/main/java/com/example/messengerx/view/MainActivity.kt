@@ -1,61 +1,47 @@
 package com.example.messengerx.view
 
-import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.graphics.Color
+import com.example.messengerx.BottomNavigationBar
 import com.example.messengerx.R
 import com.example.messengerx.ui.theme.MessengerXTheme
-import dev.chrisbanes.haze.HazeState
+import com.example.messengerx.view.chat.ChatListScreen
+import com.example.messengerx.view.chat.ChatItem
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setTheme(R.style.Theme_MessengerX)
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
-        )
+        // Предполагается, что пользователь уже вошёл в систему
         setContent {
             MessengerXTheme {
-                MainScreen(
-                   // homeViewModel = homeViewModel,
-//                           walletViewModel = walletViewModel,
-                   // profileViewModel = profileViewModel,
-                  //  feesViewModel = feesViewModel,
-                   // supportViewModel = supportViewModel
+                // Создаём примерный список чатов. В будущем замените на данные из БД.
+                val chatList = listOf(
+                    ChatItem("Alice", R.drawable.ic_avatar1, true, "10:00 AM"),
+                    ChatItem("Bob", R.drawable.ic_avatar2, false, "Yesterday"),
+                    // Добавьте другие чаты здесь
                 )
+
+                Scaffold(
+                    bottomBar = {
+                        BottomNavigationBar(
+                            hazeState = rememberHazeState(),
+                            onItemSelected = { /* Обработка выбора пунктов */ }
+                        )
+                    }
+                ) { innerPadding ->
+                    ChatListScreen(
+                        chatList = chatList,
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }
             }
         }
-    }
-}
-
-@Composable
-fun MainScreen(
-   // homeViewModel: HomeViewModel,
-   // profileViewModel: ProfileViewModel,
-  //  feesViewModel: FeesViewModel,
-   // supportViewModel: SupportViewModel
-){
-    val navController = rememberNavController()
-    val hazeState = remember { HazeState() }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MessengerXTheme {
-        Greeting("Android")
     }
 }
