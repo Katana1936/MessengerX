@@ -28,6 +28,7 @@ class MainActivity : ComponentActivity() {
                     // Добавьте другие чаты здесь
                 )
 
+                
                 Scaffold(
                     bottomBar = {
                         BottomNavigationBar(
