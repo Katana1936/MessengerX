@@ -87,13 +87,6 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit) {
             onValueChange = { username = it },
             label = { Text("Логін") },
             modifier = Modifier.fillMaxWidth(),
-            colors = TextFieldDefaults.textFieldColors(
-                textColor = Color.White,
-                cursorColor = Color.White,
-                focusedIndicatorColor = Color.White,
-                unfocusedIndicatorColor = Color.LightGray,
-                containerColor = Color(0x40FFFFFF)
-            )
         )
         Spacer(modifier = Modifier.height(10.dp))
         TextField(
@@ -101,13 +94,6 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit) {
             onValueChange = { email = it },
             label = { Text("Електронна пошта") },
             modifier = Modifier.fillMaxWidth(),
-            colors = TextFieldDefaults.textFieldColors(
-                textColor = Color.White,
-                cursorColor = Color.White,
-                focusedIndicatorColor = Color.White,
-                unfocusedIndicatorColor = Color.LightGray,
-                containerColor = Color(0x40FFFFFF)
-            )
         )
         Spacer(modifier = Modifier.height(10.dp))
         TextField(
@@ -116,13 +102,6 @@ fun RegistrationScreen(onRegisterSuccess: () -> Unit) {
             label = { Text("Пароль") },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation(),
-            colors = TextFieldDefaults.textFieldColors(
-                textColor = Color.White,
-                cursorColor = Color.White,
-                focusedIndicatorColor = Color.White,
-                unfocusedIndicatorColor = Color.LightGray,
-                containerColor = Color(0x40FFFFFF)
-            )
         )
         Spacer(modifier = Modifier.height(20.dp))
         GradientBlurButton(onClick = { onRegisterSuccess() }, text = "Зареєструватись")

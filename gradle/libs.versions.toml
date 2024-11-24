@@ -14,7 +14,7 @@ navigationCompose = "2.8.4"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
-haze-jetpack-compose = { module = "dev.chrisbanes.haze:haze-jetpack-compose", version.ref = "hazeJetpackCompose" }
+haze = { module = "dev.chrisbanes.haze:haze", version.ref = "hazeJetpackCompose" }
 haze-materials = { module = "dev.chrisbanes.haze:haze-materials", version.ref = "hazeJetpackCompose" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
