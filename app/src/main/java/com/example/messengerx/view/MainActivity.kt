@@ -61,7 +61,7 @@ fun ChatListScreen(chatList: List<ChatItem>, modifier: Modifier = Modifier) {
             TopAppBar(
                 title = { Text(text = "Чаты") },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF0F3FF)
+                    containerColor = Color.Transparent
                 )
             )
         },
@@ -69,7 +69,7 @@ fun ChatListScreen(chatList: List<ChatItem>, modifier: Modifier = Modifier) {
             LazyColumn(
                 modifier = modifier
                     .fillMaxSize()
-                    .background(Color(0xFFF0F3FF))
+                    .background(largeRadialGradient)
                     .padding(paddingValues)
             ) {
                 items(chatList) { chat ->

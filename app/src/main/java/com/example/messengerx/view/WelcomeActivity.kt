@@ -2,6 +2,7 @@ package com.example.messengerx.view
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Shader
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,8 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RadialGradientShader
+import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.messengerx.ui.theme.MessengerXTheme
@@ -25,15 +30,17 @@ import com.example.messengerx.view.login.LoginActivity
 import com.example.messengerx.view.registration.RegistrationActivity
 import kotlinx.coroutines.delay
 
-// Определение градиента для фона
-val largeRadialGradient = Brush.radialGradient(
-    colors = listOf(
-        Color(0xFF2BE4DC),
-        Color(0xFF243484)
-    ),
-    center = Offset(0.5f, 0.5f),
-    radius = Float.POSITIVE_INFINITY
-)
+val largeRadialGradient = object : ShaderBrush() {
+    override fun createShader(size: Size): Shader {
+        val biggerDimension = maxOf(size.height, size.width)
+        return RadialGradientShader(
+            colors = listOf(Color(0xFF2be4dc), Color(0xFF243484)),
+            center = size.center,
+            radius = biggerDimension / 2f,
+            colorStops = listOf(0f, 0.95f)
+        )
+    }
+}
 
 class WelcomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
