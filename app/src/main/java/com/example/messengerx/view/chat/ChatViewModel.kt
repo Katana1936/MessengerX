@@ -18,13 +18,8 @@ class ChatViewModel : ViewModel() {
 
     private fun loadChats() {
         viewModelScope.launch {
-            // Загрузка статических данных для демонстрации
-            _chatList.value = listOf(
-                ChatItem("Alice", isOnline = true, lastSeen = "10:00 AM"),
-                ChatItem("Bob", isOnline = false, lastSeen = "Yesterday"),
-                ChatItem("Charlie", isOnline = false, lastSeen = "2 days ago")
-                // Добавьте другие чаты здесь
-            )
+            val singleChat = ChatItem("Alice", isOnline = true, lastSeen = "10:00 AM")
+            _chatList.value = List(20) { singleChat }
         }
     }
 }
