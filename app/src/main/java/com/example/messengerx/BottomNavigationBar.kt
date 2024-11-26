@@ -33,12 +33,12 @@ fun BottomNavigationBar(
     hazeState: HazeState,
     modifier: Modifier = Modifier,
     onItemSelected: (String) -> Unit = {},
-    backgroundColor: Color = dark_dark_blue,
-    blurRadius: Dp = 200.dp,
-    tintColors: List<Color> = listOf(Color.White.copy(alpha = 0.0f)),
-    noiseFactor: Float = 0.15f,
+    backgroundColor: Color = Color.Transparent, // Прозрачный фон
+    blurRadius: Dp = 25.dp, // Радиус размытия
+    tintColors: List<Color> = listOf(Color.White.copy(alpha = 0.1f)), // Полупрозрачный белый оттенок
+    noiseFactor: Float = 0.0f,
     progressive: HazeProgressive? = null,
-    mask: Brush? = null
+    mask: Brush? = null// Убираем шум для более чистого эффекта
 ) {
     var selectedItem by remember { mutableStateOf(2) }
 
@@ -57,23 +57,19 @@ fun BottomNavigationBar(
         painterResource(id = R.drawable.ic_settings)
     )
 
-
+    // Используем CustomHazeStyle
     val hazeStyle = CustomHazeStyle(
         backgroundColor = backgroundColor,
         blurRadius = blurRadius,
         tintColors = tintColors,
-        noiseFactor = noiseFactor,
-        fallbackTintColor = tintColors.firstOrNull() ?: dark_dark_blue.copy(alpha = 0.0f)
+        noiseFactor = noiseFactor
     )
-
 
     NavigationBar(
         modifier = modifier
-            .hazeChild(state = hazeState) {
-                style = hazeStyle
-            }
+            .hazeChild(state = hazeState, style = hazeStyle) // Передаём созданный стиль
             .fillMaxWidth(),
-        containerColor = Color.Transparent
+        containerColor = Color.Transparent // Прозрачность, чтобы видно было размытие
     ) {
         items.forEachIndexed { index, item ->
             NavigationBarItem(
@@ -81,13 +77,13 @@ fun BottomNavigationBar(
                     Icon(
                         if (selectedItem == index) selectedIcons[index] else unselectedIcons[index],
                         contentDescription = item,
-                        tint = white
+                        tint = if (selectedItem == index) Color.White else Color.Gray
                     )
                 },
                 label = {
                     Text(
                         text = item,
-                        color = white,
+                        color = if (selectedItem == index) Color.White else Color.Gray,
                         style = MaterialTheme.typography.labelSmall
                     )
                 },
@@ -97,34 +93,36 @@ fun BottomNavigationBar(
                     onItemSelected(item)
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = white,
-                    unselectedIconColor = white,
-                    selectedTextColor = white,
-                    indicatorColor = burned_blue,
-                    unselectedTextColor = white
+                    selectedIconColor = Color.White,
+                    unselectedIconColor = Color.Gray,
+                    selectedTextColor = Color.White,
+                    indicatorColor = Color.White,
+                    unselectedTextColor = Color.Gray
                 )
             )
         }
     }
 }
 
+    @Composable
+    fun CustomHazeStyle(
+        backgroundColor: Color = Color.Transparent, // Прозрачный фон для размытия
+        blurRadius: Dp = 25.dp, // Радиус размытия
+        tintColors: List<Color> = listOf(Color.White.copy(alpha = 0.1f)), // Полупрозрачный белый оттенок
+        noiseFactor: Float = 0.0f // Убираем шум
+    ): HazeStyle {
+        return HazeStyle(
+            backgroundColor = backgroundColor,
+            tints = tintColors.map { HazeTint(color = it) },
+            blurRadius = blurRadius,
+            noiseFactor = noiseFactor,
+            fallbackTint = HazeTint(color = tintColors.firstOrNull() ?: Color.Transparent)
+        )
+    }
 
-@Composable
-fun CustomHazeStyle(
-    backgroundColor: Color = light_blue,
-    blurRadius: Dp = 200.dp,
-    tintColors: List<Color> = listOf(dark_dark_blue.copy(alpha = 0.0f)),
-    noiseFactor: Float = 0.15f,
-    fallbackTintColor: Color = dark_dark_blue.copy(alpha = 0.0f)
-): HazeStyle {
-    return HazeStyle(
-        backgroundColor = backgroundColor,
-        tints = tintColors.map { HazeTint(color = it) },
-        blurRadius = blurRadius,
-        noiseFactor = noiseFactor,
-        fallbackTint = HazeTint(color = fallbackTintColor)
-    )
-}
+
+
+
 
 
 

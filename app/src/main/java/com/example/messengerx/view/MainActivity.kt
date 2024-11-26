@@ -3,6 +3,7 @@ package com.example.messengerx.view
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -25,6 +26,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.messengerx.BottomNavigationBar
+import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.chat.ChatItemCard
 import com.example.messengerx.view.chat.ChatViewModel
 import com.example.messengerx.view.chat.ChatViewModelFactory
@@ -34,6 +36,13 @@ import dev.chrisbanes.haze.haze
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        window.setBackgroundDrawableResource(android.R.color.transparent)
+        window.decorView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        )
 
         // Проверка первого запуска
         val sharedPref = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
@@ -51,7 +60,9 @@ class MainActivity : ComponentActivity() {
 
         // Устанавливаем контент для MainActivity
         setContent {
-            MainScreen()
+            ThemeMessengerX(isTransparent = true) {
+                MainScreen()
+            }
         }
     }
 }

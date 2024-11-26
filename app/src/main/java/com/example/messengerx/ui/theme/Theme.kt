@@ -1,30 +1,42 @@
 package com.example.messengerx.ui.theme
 
 import android.os.Build
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Shapes
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
-private val DarkColorScheme = darkColorScheme(
-    primary = blue,
-    secondary = burned_blue,
-    tertiary = dark_blue
-)
-
+// Цветовые схемы для светлой и тёмной тем
 private val LightColorScheme = lightColorScheme(
-    primary = blue,
-    secondary = burned_blue,
-    tertiary = dark_blue
+    primary = Color(0xFF6200EE), // Основной цвет
+    onPrimary = Color.White, // Цвет текста на основном цвете
+    primaryContainer = Color(0xFFBB86FC), // Контейнер для основного цвета
+    secondary = Color(0xFF03DAC6), // Второстепенный цвет
+    onSecondary = Color.Black, // Цвет текста на второстепенном цвете
+    background = Color.White, // Фон приложения
+    surface = Color.White, // Поверхности
+    onBackground = Color.Black, // Текст на фоне
+    onSurface = Color.Black // Текст на поверхностях
 )
 
+private val DarkColorScheme = darkColorScheme(
+    primary = Color(0xFFBB86FC), // Основной цвет
+    onPrimary = Color.Black, // Цвет текста на основном цвете
+    primaryContainer = Color(0xFF3700B3), // Контейнер для основного цвета
+    secondary = Color(0xFF03DAC6), // Второстепенный цвет
+    onSecondary = Color.Black, // Цвет текста на второстепенном цвете
+    background = Color(0xFF121212), // Фон приложения
+    surface = Color(0xFF121212), // Поверхности
+    onBackground = Color.White, // Текст на фоне
+    onSurface = Color.White // Текст на поверхностях
+)
+
+// Форма углов компонентов
 val AppShapes = Shapes(
     extraSmall = RoundedCornerShape(4.dp),
     small = RoundedCornerShape(8.dp),
@@ -33,11 +45,12 @@ val AppShapes = Shapes(
     extraLarge = RoundedCornerShape(20.dp)
 )
 
+
 @Composable
 fun ThemeMessengerX(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false, // Если вы хотите использовать динамические цвета
+    isTransparent: Boolean = false, // Новый параметр для управления прозрачностью
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -49,10 +62,24 @@ fun ThemeMessengerX(
         else -> LightColorScheme
     }
 
+    // Определяем цвет фона в зависимости от `isTransparent`
+    val backgroundColor = if (isTransparent) {
+        Color.Transparent
+    } else {
+        colorScheme.background
+    }
+
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
         shapes = AppShapes,
-        content = content
+        content = {
+            androidx.compose.foundation.layout.Box(
+                modifier = Modifier.background(backgroundColor)
+            ) {
+                content()
+            }
+        }
     )
 }
+
