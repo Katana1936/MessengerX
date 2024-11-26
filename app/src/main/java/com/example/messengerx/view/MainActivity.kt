@@ -73,20 +73,11 @@ fun MainScreen() {
             )
         }
     ) { innerPadding ->
-        // Добавляем тёмный фон
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF121212),
-                            Color(0xFF1C1C1C),
-                        )
-                    )
-                )
+                .background(Color(0xFFE3F2FD))
                 .padding(innerPadding)
-                .haze(state = hazeState)
         ) {
             NavHost(
                 navController = navController,
