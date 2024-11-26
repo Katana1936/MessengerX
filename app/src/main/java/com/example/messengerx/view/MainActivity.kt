@@ -23,7 +23,6 @@ import com.example.messengerx.view.chat.ChatItem
 import com.example.messengerx.view.chat.ChatItemCard
 import com.example.messengerx.view.chat.ChatViewModel
 import com.example.messengerx.BottomNavigationBar
-import com.example.messengerx.ParentComposable
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 
@@ -43,13 +42,10 @@ class MainActivity : ComponentActivity() {
                 Box(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Background content with the haze modifier
                     ChatListScreen(
                         chatList = chatListState.value,
-                        hazeState = hazeState // Pass hazeState to ChatListScreen
+                        hazeState = hazeState
                     )
-
-                    // BottomNavigationBar with the hazeChild modifier
                     BottomNavigationBar(
                         hazeState = hazeState,
                         onItemSelected = { /* Handle item selection */ },

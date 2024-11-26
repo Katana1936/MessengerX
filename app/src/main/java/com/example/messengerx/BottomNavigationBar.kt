@@ -1,8 +1,5 @@
 package com.example.messengerx
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -19,74 +16,77 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.example.messengerx.ui.theme.burned_blue
+import com.example.messengerx.ui.theme.dark_dark_blue
+import com.example.messengerx.ui.theme.white
+import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeChild
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
-import dev.chrisbanes.haze.materials.HazeMaterials
-
-@Composable
-fun ParentComposable() {
-    val hazeState = remember { HazeState() }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .haze(state = hazeState)
-    ) {
-
-        BottomNavigationBar(
-            hazeState = hazeState,
-            onItemSelected = { /* Handle item selection */ }
-        )
-    }
-}
+import dev.chrisbanes.haze.HazeStyle as HazeStyle1
 
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 fun BottomNavigationBar(
     hazeState: HazeState,
     modifier: Modifier = Modifier,
-    onItemSelected: (String) -> Unit = {}
+    onItemSelected: (String) -> Unit = {},
+    backgroundColor: Color = dark_dark_blue,
+    blurRadius: Dp = 200.dp,
+    tintColors: List<Color> = listOf(Color.White.copy(alpha = 0.0f)),
+    noiseFactor: Float = 0.15f,
+    progressive: HazeProgressive? = null,
+    mask: Brush? = null
 ) {
-    var selectedItem by remember { mutableStateOf(2) } // Default to "Чаты"
+    var selectedItem by remember { mutableStateOf(2) }
 
     val items = listOf("Контакты", "Аккаунт", "Чаты", "Настройки")
-    val icons = listOf(
-        R.drawable.ic_contact,
-        R.drawable.ic_account,
-        R.drawable.ic_chat,
-        R.drawable.ic_settings
-    )
-    val style = HazeMaterials.regular(MaterialTheme.colorScheme.surface)
 
+    val selectedIcons = listOf(
+        painterResource(id = R.drawable.ic_contact),
+        painterResource(id = R.drawable.ic_account),
+        painterResource(id = R.drawable.ic_chat),
+        painterResource(id = R.drawable.ic_settings)
+    )
+    val unselectedIcons = listOf(
+        painterResource(id = R.drawable.ic_contact),
+        painterResource(id = R.drawable.ic_account),
+        painterResource(id = R.drawable.ic_chat),
+        painterResource(id = R.drawable.ic_settings)
+
+    )
+    //val hazeStyle = HazeMaterials.ultraThin()
+    val hazeStyle = CustomHazeStyle(
+        backgroundColor = backgroundColor,
+        blurRadius = blurRadius,
+        tintColors = tintColors,
+        noiseFactor = noiseFactor,
+        fallbackTintColor = tintColors.firstOrNull() ?: dark_dark_blue.copy(alpha = 0.0f)
+    )
     NavigationBar(
         modifier = modifier
-            .hazeChild(state = hazeState, style = style)
-            .fillMaxWidth()
-            .background(
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = 0.05f),
-                        Color.LightGray.copy(alpha = 0.1f)
-                    )
-                )
-            ),
-        containerColor = Color.Transparent // Transparent container
+            .hazeChild(state = hazeState) {
+                style = hazeStyle
+            }
+            .fillMaxWidth(),
+        containerColor = Color.Transparent
     ) {
         items.forEachIndexed { index, item ->
             NavigationBarItem(
                 icon = {
                     Icon(
-                        painter = painterResource(id = icons[index]),
+                        if (selectedItem == index) selectedIcons[index] else unselectedIcons[index],
                         contentDescription = item,
-                        tint = if (selectedItem == index) Color.Blue else Color.Gray
+                        tint = white
                     )
                 },
                 label = {
                     Text(
                         text = item,
-                        color = if (selectedItem == index) Color.Blue else Color.Gray,
+                        color = white,
                         style = MaterialTheme.typography.labelSmall
                     )
                 },
@@ -96,15 +96,33 @@ fun BottomNavigationBar(
                     onItemSelected(item)
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color.Blue,
-                    unselectedIconColor = Color.Gray,
-                    indicatorColor = Color.Blue
+                    selectedIconColor = white,
+                    unselectedIconColor = white,
+                    selectedTextColor = white,
+                    indicatorColor = burned_blue,
+                    unselectedTextColor = white
                 )
             )
         }
     }
 }
 
+@Composable
+fun CustomHazeStyle(
+    backgroundColor: Color = dark_dark_blue,
+    blurRadius: Dp = 200.dp,
+    tintColors: List<Color> = listOf(dark_dark_blue.copy(alpha = 0.0f)),
+    noiseFactor: Float = 0.15f,
+    fallbackTintColor: Color = dark_dark_blue.copy(alpha = 0.0f)
+): HazeStyle1 {
+    return HazeStyle1(
+        backgroundColor = backgroundColor,
+        tints = tintColors.map { HazeTint(color = it) },
+        blurRadius = blurRadius,
+        noiseFactor = noiseFactor,
+        fallbackTint = HazeTint(color = fallbackTintColor)
+    )
+}
 
 
 
