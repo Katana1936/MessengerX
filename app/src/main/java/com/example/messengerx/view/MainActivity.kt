@@ -5,6 +5,8 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,6 +17,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -55,12 +59,12 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
-    val hazeState = remember { HazeState() } // Состояние Haze
+    val hazeState = remember { HazeState() }
 
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
-                hazeState = hazeState, // Передаём состояние
+                hazeState = hazeState,
                 onItemSelected = { route ->
                     when (route) {
                         "Главная" -> navController.navigate("home")
@@ -69,19 +73,33 @@ fun MainScreen() {
             )
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = "home",
+        // Добавляем тёмный фон
+        Box(
             modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF121212),
+                            Color(0xFF1C1C1C),
+                        )
+                    )
+                )
                 .padding(innerPadding)
-                .haze(state = hazeState) // Применяем Haze к содержимому
+                .haze(state = hazeState)
         ) {
-            composable("home") {
-                HomeScreen()
+            NavHost(
+                navController = navController,
+                startDestination = "home"
+            ) {
+                composable("home") {
+                    HomeScreen()
+                }
             }
         }
     }
 }
+
 
 
 @Composable
