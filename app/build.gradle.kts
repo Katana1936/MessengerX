@@ -64,5 +64,6 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.haze.materials)
     implementation(libs.haze)
+    implementation (libs.coil.compose)
 
 }

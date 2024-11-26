@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.messengerx.ui.theme.MessengerXTheme
+import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.GradientBlurButton
 import com.example.messengerx.view.MainActivity
 
@@ -38,7 +38,7 @@ class RegistrationActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            MessengerXTheme {
+            ThemeMessengerX {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()

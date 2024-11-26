@@ -25,7 +25,7 @@ import androidx.compose.ui.graphics.RadialGradientShader
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.messengerx.ui.theme.MessengerXTheme
+import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.login.LoginActivity
 import com.example.messengerx.view.registration.RegistrationActivity
 import kotlinx.coroutines.delay
@@ -48,7 +48,7 @@ class WelcomeActivity : ComponentActivity() {
         enableEdgeToEdge() // Включение режима Edge-to-Edge
 
         setContent {
-            MessengerXTheme {
+            ThemeMessengerX {
                 // Получение ссылки на текущую активность
                 val activity = this@WelcomeActivity
 
@@ -191,7 +191,7 @@ fun WelcomeScreen(onLoginClick: () -> Unit, onRegisterClick: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun WelcomeScreenPreview() {
-    MessengerXTheme {
+    ThemeMessengerX {
         Box(
             modifier = Modifier
                 .fillMaxSize()
