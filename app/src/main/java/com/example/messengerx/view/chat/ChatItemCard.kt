@@ -28,9 +28,9 @@ fun ChatItemCard(chat: ChatItem, onClick: () -> Unit = {}) {
             .background(
                 brush = Brush.linearGradient(
                     colors = listOf(
-                        Color(0x802BE4DC),
-                        Color(0x80243484),
-                        Color(0x80EEAAEE)
+                        Color(0xFF2BE4DC).copy(alpha = 0.3f),
+                        Color(0xFF243484).copy(alpha = 0.3f),
+                        Color(0xFFEEAAEE).copy(alpha = 0.3f)
                     )
                 ),
                 shape = RoundedCornerShape(16.dp)
@@ -59,6 +59,7 @@ fun ChatItemCard(chat: ChatItem, onClick: () -> Unit = {}) {
         }
     }
 }
+
 
 data class ChatItem(
     val name: String,

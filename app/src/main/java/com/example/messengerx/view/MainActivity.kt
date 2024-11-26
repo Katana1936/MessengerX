@@ -55,12 +55,12 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
-    val hazeState = remember { HazeState() }
+    val hazeState = remember { HazeState() } // Состояние Haze
 
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
-                hazeState = hazeState,
+                hazeState = hazeState, // Передаём состояние
                 onItemSelected = { route ->
                     when (route) {
                         "Главная" -> navController.navigate("home")
@@ -73,8 +73,8 @@ fun MainScreen() {
             navController = navController,
             startDestination = "home",
             modifier = Modifier
-            .padding(innerPadding)
-            .haze(state = hazeState)
+                .padding(innerPadding)
+                .haze(state = hazeState) // Применяем Haze к содержимому
         ) {
             composable("home") {
                 HomeScreen()
@@ -82,6 +82,7 @@ fun MainScreen() {
         }
     }
 }
+
 
 @Composable
 fun HomeScreen(

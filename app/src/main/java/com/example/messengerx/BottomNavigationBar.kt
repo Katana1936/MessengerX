@@ -34,12 +34,12 @@ fun BottomNavigationBar(
     hazeState: HazeState,
     modifier: Modifier = Modifier,
     onItemSelected: (String) -> Unit = {},
-    backgroundColor: Color = dark_dark_blue,
-    blurRadius: Dp = 200.dp,
-    tintColors: List<Color> = listOf(Color.White.copy(alpha = 0.0f)),
-    noiseFactor: Float = 0.15f,
-    progressive: HazeProgressive? = null,
-    mask: Brush? = null
+    blurRadius: Dp = 20.dp, // Уменьшаем размытие для лучшего эффекта
+    tintColors: List<Color> = listOf(
+        Color.White.copy(alpha = 0.1f), // Лёгкий белый градиент
+        Color.Cyan.copy(alpha = 0.2f)
+    ),
+    noiseFactor: Float = 0.1f // Небольшой шум для текстуры
 ) {
     var selectedItem by remember { mutableStateOf(2) }
 
@@ -56,23 +56,21 @@ fun BottomNavigationBar(
         painterResource(id = R.drawable.ic_account),
         painterResource(id = R.drawable.ic_chat),
         painterResource(id = R.drawable.ic_settings)
+    )
 
-    )
-    //val hazeStyle = HazeMaterials.ultraThin()
-    val hazeStyle = CustomHazeStyle(
-        backgroundColor = backgroundColor,
+
+    val hazeStyle = HazeStyle1(
+        backgroundColor = Color.Transparent,
         blurRadius = blurRadius,
-        tintColors = tintColors,
-        noiseFactor = noiseFactor,
-        fallbackTintColor = tintColors.firstOrNull() ?: dark_dark_blue.copy(alpha = 0.0f)
+        tints = tintColors.map { HazeTint(color = it) },
+        noiseFactor = noiseFactor
     )
+
     NavigationBar(
         modifier = modifier
-            .hazeChild(state = hazeState) {
-                style = hazeStyle
-            }
+            .hazeChild(state = hazeState) { style = hazeStyle } // Применяем Haze
             .fillMaxWidth(),
-        containerColor = Color.Transparent
+        containerColor = Color.Transparent // Убираем цвет панели
     ) {
         items.forEachIndexed { index, item ->
             NavigationBarItem(
@@ -80,13 +78,13 @@ fun BottomNavigationBar(
                     Icon(
                         if (selectedItem == index) selectedIcons[index] else unselectedIcons[index],
                         contentDescription = item,
-                        tint = white
+                        tint = Color.White
                     )
                 },
                 label = {
                     Text(
                         text = item,
-                        color = white,
+                        color = Color.White,
                         style = MaterialTheme.typography.labelSmall
                     )
                 },
@@ -96,24 +94,28 @@ fun BottomNavigationBar(
                     onItemSelected(item)
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = white,
-                    unselectedIconColor = white,
-                    selectedTextColor = white,
-                    indicatorColor = burned_blue,
-                    unselectedTextColor = white
+                    selectedIconColor = Color.White,
+                    unselectedIconColor = Color.White.copy(alpha = 0.6f),
+                    selectedTextColor = Color.White,
+                    indicatorColor = Color.Cyan.copy(alpha = 0.3f),
+                    unselectedTextColor = Color.White.copy(alpha = 0.6f)
                 )
             )
         }
     }
 }
 
+
 @Composable
 fun CustomHazeStyle(
     backgroundColor: Color = dark_dark_blue,
-    blurRadius: Dp = 200.dp,
-    tintColors: List<Color> = listOf(dark_dark_blue.copy(alpha = 0.0f)),
-    noiseFactor: Float = 0.15f,
-    fallbackTintColor: Color = dark_dark_blue.copy(alpha = 0.0f)
+    blurRadius: Dp = 20.dp,
+    tintColors: List<Color> = listOf(
+        Color.White.copy(alpha = 0.2f),
+        dark_dark_blue.copy(alpha = 0.1f)
+    ),
+    noiseFactor: Float = 0.05f,
+    fallbackTintColor: Color = dark_dark_blue.copy(alpha = 0.1f)
 ): HazeStyle1 {
     return HazeStyle1(
         backgroundColor = backgroundColor,
@@ -123,6 +125,7 @@ fun CustomHazeStyle(
         fallbackTint = HazeTint(color = fallbackTintColor)
     )
 }
+
 
 
 
