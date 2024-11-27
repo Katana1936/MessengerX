@@ -3,7 +3,9 @@ package com.example.messengerx
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.*
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -16,9 +18,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.messengerx.ui.theme.burned_blue
-import com.example.messengerx.ui.theme.dark_dark_blue
-import com.example.messengerx.ui.theme.light_blue
 import com.example.messengerx.ui.theme.white
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
@@ -33,12 +32,12 @@ fun BottomNavigationBar(
     hazeState: HazeState,
     modifier: Modifier = Modifier,
     onItemSelected: (String) -> Unit = {},
-    backgroundColor: Color = Color.Transparent, // Прозрачный фон
-    blurRadius: Dp = 25.dp, // Радиус размытия
-    tintColors: List<Color> = listOf(Color.White.copy(alpha = 0.1f)), // Полупрозрачный белый оттенок
+    backgroundColor: Color = Color.Transparent,
+    blurRadius: Dp = 25.dp,
+    tintColors: List<Color> = listOf(Color.White.copy(alpha = 0.1f)),
     noiseFactor: Float = 0.0f,
     progressive: HazeProgressive? = null,
-    mask: Brush? = null// Убираем шум для более чистого эффекта
+    mask: Brush? = null
 ) {
     var selectedItem by remember { mutableStateOf(2) }
 
@@ -57,7 +56,7 @@ fun BottomNavigationBar(
         painterResource(id = R.drawable.ic_settings)
     )
 
-    // Используем CustomHazeStyle
+    // Используем кастомный стиль для Haze
     val hazeStyle = CustomHazeStyle(
         backgroundColor = backgroundColor,
         blurRadius = blurRadius,
@@ -67,23 +66,23 @@ fun BottomNavigationBar(
 
     NavigationBar(
         modifier = modifier
-            .hazeChild(state = hazeState, style = hazeStyle) // Передаём созданный стиль
+            .hazeChild(state = hazeState, style = hazeStyle)
             .fillMaxWidth(),
-        containerColor = Color.Transparent // Прозрачность, чтобы видно было размытие
+        containerColor = Color.Transparent
     ) {
         items.forEachIndexed { index, item ->
             NavigationBarItem(
                 icon = {
                     Icon(
-                        if (selectedItem == index) selectedIcons[index] else unselectedIcons[index],
+                        painter = if (selectedItem == index) selectedIcons[index] else unselectedIcons[index],
                         contentDescription = item,
-                        tint = if (selectedItem == index) Color.White else Color.Gray
+                        tint = white
                     )
                 },
                 label = {
                     Text(
                         text = item,
-                        color = if (selectedItem == index) Color.White else Color.Gray,
+                        color = white,
                         style = MaterialTheme.typography.labelSmall
                     )
                 },
@@ -96,7 +95,7 @@ fun BottomNavigationBar(
                     selectedIconColor = Color.White,
                     unselectedIconColor = Color.Gray,
                     selectedTextColor = Color.White,
-                    indicatorColor = Color.White,
+                    indicatorColor = Color.Transparent,
                     unselectedTextColor = Color.Gray
                 )
             )
@@ -104,14 +103,16 @@ fun BottomNavigationBar(
     }
 }
 
-    @Composable
-    fun CustomHazeStyle(
-        backgroundColor: Color = Color.Transparent, // Прозрачный фон для размытия
-        blurRadius: Dp = 25.dp, // Радиус размытия
-        tintColors: List<Color> = listOf(Color.White.copy(alpha = 0.1f)), // Полупрозрачный белый оттенок
-        noiseFactor: Float = 0.0f // Убираем шум
-    ): HazeStyle {
-        return HazeStyle(
+
+@Composable
+fun CustomHazeStyle(
+    backgroundColor: Color = Color.Transparent,
+    blurRadius: Dp = 30.dp, // Увеличьте радиус для сильного эффекта
+    tintColors: List<Color> = listOf(Color.White.copy(alpha = 0.15f)), // Прозрачность
+    noiseFactor: Float = 0.05f // Небольшой шум
+): HazeStyle {
+    return remember {
+        HazeStyle(
             backgroundColor = backgroundColor,
             tints = tintColors.map { HazeTint(color = it) },
             blurRadius = blurRadius,
@@ -119,6 +120,10 @@ fun BottomNavigationBar(
             fallbackTint = HazeTint(color = tintColors.firstOrNull() ?: Color.Transparent)
         )
     }
+}
+
+
+
 
 
 

@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -13,7 +16,7 @@
         android:theme="@style/Theme.MessengerX"
         tools:targetApi="31">
 
-        <!-- WelcomeActivity как лаунчер -->
+
         <activity
             android:name=".view.WelcomeActivity"
             android:exported="true"
@@ -25,21 +28,21 @@
             </intent-filter>
         </activity>
 
-        <!-- MainActivity -->
+
         <activity
             android:name=".view.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.MessengerX" />
 
-        <!-- LoginActivity -->
+
         <activity
             android:name=".view.login.LoginActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.MessengerX" />
 
-        <!-- RegistrationActivity -->
+
         <activity
             android:name=".view.registration.RegistrationActivity"
             android:exported="true"

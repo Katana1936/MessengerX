@@ -49,8 +49,8 @@ val AppShapes = Shapes(
 @Composable
 fun ThemeMessengerX(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, // Если вы хотите использовать динамические цвета
-    isTransparent: Boolean = false, // Новый параметр для управления прозрачностью
+    dynamicColor: Boolean = false,
+    isTransparent: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -62,7 +62,6 @@ fun ThemeMessengerX(
         else -> LightColorScheme
     }
 
-    // Определяем цвет фона в зависимости от `isTransparent`
     val backgroundColor = if (isTransparent) {
         Color.Transparent
     } else {
