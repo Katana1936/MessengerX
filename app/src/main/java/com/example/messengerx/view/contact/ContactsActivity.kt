@@ -7,9 +7,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
 import com.example.messengerx.ui.theme.ThemeMessengerX
+
 
 class ContactsActivity : ComponentActivity() {
     private val viewModel: ContactsViewModel by viewModels()
@@ -27,21 +35,30 @@ class ContactsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ThemeMessengerX {
-                ContactsList(viewModel)
+                ContactsScreen(viewModel)
             }
         }
-        requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-    }
-}
 
-
-@Composable
-fun ContactsList(viewModel: ContactsViewModel) {
-    val contacts by viewModel.contacts.observeAsState(emptyList())
-    LazyColumn {
-        items(contacts) { contact ->
-            ContactsItemCard(contact = contact)
+        lifecycleScope.launch {
+            requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
         }
     }
 }
 
+@Composable
+fun ContactsScreen(viewModel: ContactsViewModel) {
+    val contacts by viewModel.contactsFlow.collectAsState(initial = emptyList())
+    val isLoading by viewModel.isLoading.collectAsState(initial = true)
+
+    if (isLoading) {
+        CircularProgressIndicator(modifier = Modifier.fillMaxSize())
+    } else if (contacts.isEmpty()) {
+        Text(text = "Контакты не найдены", modifier = Modifier.fillMaxSize())
+    } else {
+        LazyColumn {
+            items(contacts) { contact ->
+                ContactsItemCard(contact = contact)
+            }
+        }
+    }
+}

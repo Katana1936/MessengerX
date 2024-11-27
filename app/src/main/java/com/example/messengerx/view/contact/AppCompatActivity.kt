@@ -9,7 +9,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.messengerx.R
 
-class MainActivity : AppCompatActivity() {
+class AppCompatActivity () {
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -58,13 +58,19 @@ class MainActivity : AppCompatActivity() {
             null, null, null
         )
 
-        cursor?.use {
-            while (it.moveToNext()) {
-                val name = it.getString(it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME))
-                val phoneNumber = it.getString(it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+        cursor?.use { cursor ->
+            val nameIndex = cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+            val numberIndex = cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER)
+
+            while (cursor.moveToNext()) {
+                val name = cursor.getString(nameIndex)
+                val phoneNumber = cursor.getString(numberIndex)
                 // Добавьте логику обработки контактов
                 println("Имя: $name, Телефон: $phoneNumber")
             }
+        } ?: run {
+            // Если курсор null, обрабатываем ошибку
+            Toast.makeText(this, "Не удалось получить контакты", Toast.LENGTH_SHORT).show()
         }
     }
-}
+
