@@ -49,6 +49,13 @@
             android:label="@string/app_name"
             android:theme="@style/Theme.MessengerX" />
 
+        <activity
+            android:name=".view.contact.ContactsActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.MessengerX" />
+
+
 
     </application>
 

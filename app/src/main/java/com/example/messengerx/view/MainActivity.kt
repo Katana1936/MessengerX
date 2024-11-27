@@ -30,6 +30,8 @@ import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.chat.ChatItemCard
 import com.example.messengerx.view.chat.ChatViewModel
 import com.example.messengerx.view.chat.ChatViewModelFactory
+import com.example.messengerx.view.contact.ContactsList
+import com.example.messengerx.view.contact.ContactsViewModel
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 
@@ -79,6 +81,8 @@ fun MainScreen() {
                 onItemSelected = { route ->
                     when (route) {
                         "Главная" -> navController.navigate("home")
+                        "Контакты" -> navController.navigate("contacts")
+                        "Чаты" -> navController.navigate("home")
                     }
                 }
             )
@@ -97,14 +101,16 @@ fun MainScreen() {
                 composable("home") {
                     HomeScreen()
 
-                    composable(contacts) {
-                        ContactsList()
+                    composable("contacts") {
+                        val viewModel: ContactsViewModel = viewModel()
+                        ContactsList(viewModel)
                     }
+                }
                 }
             }
         }
     }
-}
+
 
 
 
