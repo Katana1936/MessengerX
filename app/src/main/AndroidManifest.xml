@@ -49,6 +49,7 @@
             android:label="@string/app_name"
             android:theme="@style/Theme.MessengerX" />
 
+
     </application>
 
 </manifest>

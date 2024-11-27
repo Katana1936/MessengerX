@@ -96,6 +96,10 @@ fun MainScreen() {
             ) {
                 composable("home") {
                     HomeScreen()
+
+                    composable(contacts) {
+                        ContactsList()
+                    }
                 }
             }
         }
