@@ -8,24 +8,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.messengerx.ui.theme.ThemeMessengerX
-import java.lang.reflect.Modifier
 
 class ContactsActivity : ComponentActivity() {
     private val viewModel: ContactsViewModel by viewModels()
@@ -72,44 +57,3 @@ class ContactsActivity : ComponentActivity() {
     }
 }
 
-
-@Composable
-fun ContactsScreen(viewModel: ContactsViewModel) {
-    val contacts by viewModel.filteredContacts.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState()
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Контакты") },
-                navigationIcon = {
-                    IconButton(onClick = { /* TODO: Добавить действие сортировки */ }) {
-                        Icon(Icons.Default.Sort, contentDescription = "Сортировка")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { /* TODO: Добавить действие добавления контакта */ }) {
-                        Icon(Icons.Default.Add, contentDescription = "Добавить")
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues)) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { viewModel.updateSearchQuery(it) },
-                label = { Text("Поиск") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-            )
-
-            LazyColumn {
-                items(contacts) { contact ->
-                    ContactsItemCard(contact = contact)
-                }
-            }
-        }
-    }
-}

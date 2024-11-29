@@ -66,6 +66,14 @@ dependencies {
     implementation(libs.haze.materials)
     implementation(libs.haze)
     implementation (libs.coil.compose)
+    implementation (libs.androidx.lifecycle.viewmodel.ktx)
+    implementation (libs.androidx.lifecycle.livedata.ktx)
+    implementation (libs.kotlinx.coroutines.core)
+    implementation (libs.kotlinx.coroutines.android)
+    implementation (libs.androidx.lifecycle.runtime.compose)
+    implementation (libs.androidx.runtime.livedata)
+    implementation (libs.androidx.material.icons.extended)
+    implementation (libs.androidx.activity.ktx)
 
 
 }
