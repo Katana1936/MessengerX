@@ -24,7 +24,7 @@ fun ContactsItemCard(contact: Contact) {
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Аватарка контакта
+        // Аватарка контакта (заглушка)
         Box(
             modifier = Modifier
                 .size(40.dp)
@@ -37,7 +37,11 @@ fun ContactsItemCard(contact: Contact) {
         // Информация о контакте
         Column {
             Text(text = contact.name, style = MaterialTheme.typography.bodyLarge)
-            Text(text = contact.phone, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            Text(
+                text = contact.phone,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
         }
     }
 }
