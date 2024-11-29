@@ -31,6 +31,7 @@ import com.example.messengerx.view.chat.ChatItemCard
 import com.example.messengerx.view.chat.ChatViewModel
 import com.example.messengerx.view.chat.ChatViewModelFactory
 import com.example.messengerx.view.contact.ContactsList
+import com.example.messengerx.view.contact.ContactsScreen
 import com.example.messengerx.view.contact.ContactsViewModel
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
@@ -103,7 +104,7 @@ fun MainScreen() {
 
                     composable("contacts") {
                         val viewModel: ContactsViewModel = viewModel()
-                        ContactsList(viewModel)
+                        ContactsScreen(viewModel)
                     }
                 }
                 }

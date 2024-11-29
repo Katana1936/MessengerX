@@ -2,14 +2,16 @@ package com.example.messengerx.view.contact
 
 import android.Manifest
 import android.content.ContentResolver
-import android.provider.ContactsContract
-import androidx.activity.result.contract.ActivityResultContracts
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.example.messengerx.R
 
-class AppCompatActivity () {
+class AppCompatActivity : AppCompatActivity() {
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -24,21 +26,21 @@ class AppCompatActivity () {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.ContactsActivity)
 
         checkAndRequestPermission()
     }
 
     private fun checkAndRequestPermission() {
         when {
-            checkSelfPermission(Manifest.permission.READ_CONTACTS) ==
-                    android.content.pm.PackageManager.PERMISSION_GRANTED -> {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) ==
+                    PackageManager.PERMISSION_GRANTED -> {
                 // Разрешение уже предоставлено
                 loadContacts()
             }
             shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS) -> {
                 // Показать объяснение, почему нужно разрешение
                 Toast.makeText(this, "Нужно разрешение для чтения контактов", Toast.LENGTH_LONG).show()
+                requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
             }
             else -> {
                 // Запрашиваем разрешение
@@ -73,4 +75,4 @@ class AppCompatActivity () {
             Toast.makeText(this, "Не удалось получить контакты", Toast.LENGTH_SHORT).show()
         }
     }
-
+}

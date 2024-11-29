@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import com.example.messengerx.ui.theme.ThemeMessengerX
 
 class ContactsActivity : ComponentActivity() {
+
     private val viewModel: ContactsViewModel by viewModels()
 
     private val requestPermissionLauncher =
@@ -28,7 +29,6 @@ class ContactsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ThemeMessengerX {
-                // Проверяем и запрашиваем разрешение при запуске
                 LaunchedEffect(Unit) {
                     checkAndRequestPermission()
                 }
@@ -41,19 +41,15 @@ class ContactsActivity : ComponentActivity() {
         when {
             ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) ==
                     PackageManager.PERMISSION_GRANTED -> {
-                // Разрешение уже предоставлено
                 viewModel.loadContacts()
             }
             shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS) -> {
-                // Показать объяснение, почему нужно разрешение
                 Toast.makeText(this, "Нужно разрешение для чтения контактов", Toast.LENGTH_LONG).show()
                 requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
             }
             else -> {
-                // Запрашиваем разрешение
                 requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
             }
         }
     }
 }
-
