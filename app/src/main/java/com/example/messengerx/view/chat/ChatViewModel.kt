@@ -1,15 +1,13 @@
 package com.example.messengerx.view.chat
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 
-class ChatViewModel(context: Context) : ViewModel() {
-
+class ChatViewModel : ViewModel() {
+    private val db = FirebaseFirestore.getInstance()
     private val _chatList = MutableStateFlow<List<ChatItem>>(emptyList())
     val chatList: StateFlow<List<ChatItem>> = _chatList
 
@@ -18,18 +16,29 @@ class ChatViewModel(context: Context) : ViewModel() {
     }
 
     private fun loadChats() {
-        viewModelScope.launch {
-            val singleChat = ChatItem("Alice", isOnline = true, lastSeen = "10:00 AM")
-            _chatList.value = List(20) { singleChat } // Генерация списка чатов
-        }
+        db.collection("chats")
+            .orderBy("timestamp")
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    println("Ошибка чтения чатов: ${e.message}")
+                    return@addSnapshotListener
+                }
+                if (snapshot != null && !snapshot.isEmpty) {
+                    val chats = snapshot.documents.mapNotNull { doc ->
+                        doc.toObject(ChatItem::class.java)
+                    }
+                    _chatList.value = chats
+                }
+            }
     }
 }
 
-class ChatViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
+
+class ChatViewModelFactory : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ChatViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return ChatViewModel(context) as T
+            return ChatViewModel() as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

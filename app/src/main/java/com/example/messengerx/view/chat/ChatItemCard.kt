@@ -62,7 +62,9 @@ fun ChatItemCard(chat: ChatItem, onClick: () -> Unit = {}) {
 
 
 data class ChatItem(
-    val name: String,
-    val isOnline: Boolean,
-    val lastSeen: String
+    val name: String = "",
+    val isOnline: Boolean = false,
+    val lastSeen: String = "",
+    val timestamp: Long = 0
 )
+

@@ -46,14 +46,14 @@ class LoginActivity : ComponentActivity() {
                         .background(loginGradient)
                 ) {
                     LoginScreen(
-                        onLoginSuccess = { email, password ->
+                        onLogin = { email, password ->
                             auth.signInWithEmailAndPassword(email, password)
                                 .addOnCompleteListener { task ->
                                     if (task.isSuccessful) {
                                         sharedPref.edit().putBoolean("is_logged_in", true).apply()
                                         navigateToMain()
                                     } else {
-                                        // Вывод ошибки или уведомление
+                                        // Обработать ошибку
                                         println("Ошибка входа: ${task.exception?.message}")
                                     }
                                 }
@@ -77,7 +77,7 @@ class LoginActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginScreen(onLoginSuccess: (String, String) -> Unit, onRegisterClick: () -> Unit) {
+fun LoginScreen(onLogin: (String, String) -> Unit, onRegisterClick: () -> Unit) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -105,7 +105,7 @@ fun LoginScreen(onLoginSuccess: (String, String) -> Unit, onRegisterClick: () ->
             visualTransformation = PasswordVisualTransformation()
         )
         Spacer(modifier = Modifier.height(20.dp))
-        Button(onClick = { onLoginSuccess(email, password) }) {
+        Button(onClick = { onLogin(email, password) }) {
             Text("Увійти")
         }
         Spacer(modifier = Modifier.height(10.dp))
