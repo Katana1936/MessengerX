@@ -1,18 +1,12 @@
 package com.example.messengerx.view
 
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.launch
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
@@ -21,7 +15,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -35,18 +28,18 @@ import com.example.messengerx.view.chat.ChatViewModel
 import com.example.messengerx.view.chat.ChatViewModelFactory
 import com.example.messengerx.view.contact.ContactsScreen
 import com.example.messengerx.view.contact.ContactsViewModel
+import com.google.firebase.auth.FirebaseAuth
 import dev.chrisbanes.haze.HazeState
 
 class MainActivity : ComponentActivity() {
+    private lateinit var auth: FirebaseAuth
 
-    // Регистрация камеры для получения результата
     private val cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
         if (bitmap != null) {
-            // Здесь можно сохранить изображение или загрузить его на сервер
+            // Сохраните или загрузите изображение на сервер
         }
     }
 
-    // Функция для открытия камеры
     fun openCamera() {
         cameraLauncher.launch()
     }
@@ -54,7 +47,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Устанавливаем прозрачность окна
+        auth = FirebaseAuth.getInstance()
+
         window.setBackgroundDrawableResource(android.R.color.transparent)
         window.decorView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
         window.setFlags(
@@ -62,24 +56,9 @@ class MainActivity : ComponentActivity() {
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
         )
 
-        // Проверка первого запуска
-        val sharedPref = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val isFirstLaunch = sharedPref.getBoolean("is_first_launch", true)
-
-        if (isFirstLaunch) {
-            // Обновляем флаг первого запуска
-            sharedPref.edit().putBoolean("is_first_launch", false).apply()
-
-            // Запускаем экран приветствия
-            startActivity(Intent(this, WelcomeActivity::class.java))
-            finish()
-            return
-        }
-
-        // Устанавливаем основной контент
         setContent {
             ThemeMessengerX(isTransparent = true) {
-                MainScreen(onAddStoryClick = { openCamera() }) // Передаём функцию открытия камеры
+                MainScreen(onAddStoryClick = { openCamera() })
             }
         }
     }
@@ -96,9 +75,10 @@ fun MainScreen(onAddStoryClick: () -> Unit) {
                 hazeState = hazeState,
                 onItemSelected = { route ->
                     when (route) {
-                        "Главная" -> navController.navigate("home")
-                        "Контакты" -> navController.navigate("contacts")
-                        "Чаты" -> navController.navigate("home")
+                        "Чаты" -> navController.navigate("chats") { launchSingleTop = true }
+                        "Контакты" -> navController.navigate("contacts") { launchSingleTop = true }
+                        "Аккаунт" -> navController.navigate("account") { launchSingleTop = true }
+                        "Настройки" -> navController.navigate("settings") { launchSingleTop = true }
                     }
                 }
             )
@@ -107,27 +87,32 @@ fun MainScreen(onAddStoryClick: () -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFE3F2FD))
                 .padding(innerPadding)
         ) {
             NavHost(
                 navController = navController,
-                startDestination = "home"
+                startDestination = "chats"
             ) {
-                composable("home") {
-                    HomeScreen(onAddStoryClick = onAddStoryClick)
+                composable("chats") {
+                    ChatsScreen(onAddStoryClick = onAddStoryClick)
                 }
                 composable("contacts") {
                     val viewModel: ContactsViewModel = viewModel()
                     ContactsScreen(viewModel)
                 }
+                //composable("account") {
+                //    AccountScreen() // Реализуйте экран аккаунта
+                //}
+                //composable("settings") {
+                //   SettingsScreen() // Реализуйте экран настроек
+                //}
             }
         }
     }
 }
 
 @Composable
-fun HomeScreen(
+fun ChatsScreen(
     chatViewModel: ChatViewModel = viewModel(
         factory = ChatViewModelFactory(LocalContext.current.applicationContext)
     ),
@@ -136,10 +121,8 @@ fun HomeScreen(
     val chatList by chatViewModel.chatList.collectAsState()
 
     Column {
-        // Добавляем StoriesBar для отображения историй
         StoriesBar(onAddStoryClick = onAddStoryClick)
 
-        // Список чатов
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(chatList) { chat ->
                 ChatItemCard(chat = chat)

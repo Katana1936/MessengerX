@@ -31,7 +31,7 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 fun BottomNavigationBar(
     hazeState: HazeState,
     modifier: Modifier = Modifier,
-    onItemSelected: (String) -> Unit = {},
+    onItemSelected: (String) -> Unit,
     backgroundColor: Color = Color.Transparent,
     blurRadius: Dp = 25.dp,
     tintColors: List<Color> = listOf(Color.White.copy(alpha = 0.1f)),
@@ -39,24 +39,22 @@ fun BottomNavigationBar(
     progressive: HazeProgressive? = null,
     mask: Brush? = null
 ) {
-    var selectedItem by remember { mutableStateOf(2) }
+    var selectedItem by remember { mutableStateOf(0) }
 
-    val items = listOf("Контакты", "Аккаунт", "Чаты", "Настройки")
-
+    val items = listOf("Чаты", "Контакты", "Аккаунт", "Настройки")
     val selectedIcons = listOf(
+        painterResource(id = R.drawable.ic_chat),
         painterResource(id = R.drawable.ic_contact),
         painterResource(id = R.drawable.ic_account),
-        painterResource(id = R.drawable.ic_chat),
         painterResource(id = R.drawable.ic_settings)
     )
     val unselectedIcons = listOf(
+        painterResource(id = R.drawable.ic_chat),
         painterResource(id = R.drawable.ic_contact),
         painterResource(id = R.drawable.ic_account),
-        painterResource(id = R.drawable.ic_chat),
         painterResource(id = R.drawable.ic_settings)
     )
 
-    // Используем кастомный стиль для Haze
     val hazeStyle = CustomHazeStyle(
         backgroundColor = backgroundColor,
         blurRadius = blurRadius,
@@ -76,13 +74,13 @@ fun BottomNavigationBar(
                     Icon(
                         painter = if (selectedItem == index) selectedIcons[index] else unselectedIcons[index],
                         contentDescription = item,
-                        tint = white
+                        tint = if (selectedItem == index) Color.White else Color.Gray
                     )
                 },
                 label = {
                     Text(
                         text = item,
-                        color = white,
+                        color = if (selectedItem == index) Color.White else Color.Gray,
                         style = MaterialTheme.typography.labelSmall
                     )
                 },
@@ -95,13 +93,14 @@ fun BottomNavigationBar(
                     selectedIconColor = Color.White,
                     unselectedIconColor = Color.Gray,
                     selectedTextColor = Color.White,
-                    indicatorColor = Color.Transparent,
                     unselectedTextColor = Color.Gray
                 )
             )
         }
     }
 }
+
+
 
 
 @Composable

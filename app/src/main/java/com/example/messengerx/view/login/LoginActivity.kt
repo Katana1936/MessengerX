@@ -5,40 +5,32 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.messengerx.ui.theme.ThemeMessengerX
-import com.example.messengerx.view.GradientBlurButton
 import com.example.messengerx.view.MainActivity
 import com.example.messengerx.view.registration.RegistrationActivity
+import com.google.firebase.auth.FirebaseAuth
 
-val loginGradient = Brush.radialGradient(
-    colors = listOf(
-        Color(0xFF2BE4DC),
-        Color(0xFF243484)
-    ),
-    center = Offset(0.5f, 0.5f),
-    radius = Float.POSITIVE_INFINITY
+val loginGradient = Brush.verticalGradient(
+    colors = listOf(Color(0xFF2BE4DC), Color(0xFF243484))
 )
 
 class LoginActivity : ComponentActivity() {
+    private lateinit var auth: FirebaseAuth
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        auth = FirebaseAuth.getInstance()
 
-        // Проверка, вошел ли пользователь
         val sharedPref = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val isLoggedIn = sharedPref.getBoolean("is_logged_in", false)
         if (isLoggedIn) {
@@ -51,15 +43,23 @@ class LoginActivity : ComponentActivity() {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(loginGradient) // Применение градиента для фона
+                        .background(loginGradient)
                 ) {
-                    LoginScreen(onLoginSuccess = {
-                        // Сохранение состояния входа
-                        sharedPref.edit().putBoolean("is_logged_in", true).apply()
-                        navigateToMain()
-                    }, onRegisterClick = {
-                        navigateToRegistration()
-                    })
+                    LoginScreen(
+                        onLoginSuccess = { email, password ->
+                            auth.signInWithEmailAndPassword(email, password)
+                                .addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        sharedPref.edit().putBoolean("is_logged_in", true).apply()
+                                        navigateToMain()
+                                    } else {
+                                        // Вывод ошибки или уведомление
+                                        println("Ошибка входа: ${task.exception?.message}")
+                                    }
+                                }
+                        },
+                        onRegisterClick = { navigateToRegistration() }
+                    )
                 }
             }
         }
@@ -67,54 +67,50 @@ class LoginActivity : ComponentActivity() {
 
     private fun navigateToMain() {
         val intent = Intent(this, MainActivity::class.java)
-        // Закрываем все предыдущие активности
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
     }
 
     private fun navigateToRegistration() {
-        val intent = Intent(this, RegistrationActivity::class.java)
-        startActivity(intent)
+        startActivity(Intent(this, RegistrationActivity::class.java))
     }
 }
 
 @Composable
-fun LoginScreen(onLoginSuccess: () -> Unit, onRegisterClick: () -> Unit) {
-    var username by remember { mutableStateOf("") }
+fun LoginScreen(onLoginSuccess: (String, String) -> Unit, onRegisterClick: () -> Unit) {
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = "Вхід",
-            style = MaterialTheme.typography.headlineMedium,
-            color = Color.White
-        )
+        Text("Вхід", style = MaterialTheme.typography.headlineMedium, color = Color.White)
         Spacer(modifier = Modifier.height(20.dp))
-        TextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Логін") },
-            modifier = Modifier.fillMaxWidth(),
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") },
+            modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(10.dp))
-        TextField(
+        OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Пароль") },
             modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = PasswordVisualTransformation()
         )
         Spacer(modifier = Modifier.height(20.dp))
-        GradientBlurButton(onClick = { onLoginSuccess() }, text = "Увійти")
+        Button(onClick = { onLoginSuccess(email, password) }) {
+            Text("Увійти")
+        }
         Spacer(modifier = Modifier.height(10.dp))
         TextButton(onClick = { onRegisterClick() }) {
-            Text(text = "Немає аккаунта? Зареєструватися", color = Color.White)
+            Text("Немає аккаунта? Зареєструватися", color = Color.White)
         }
     }
 }
