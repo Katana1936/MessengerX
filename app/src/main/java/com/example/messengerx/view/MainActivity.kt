@@ -6,8 +6,11 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.launch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,6 +29,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.messengerx.BottomNavigationBar
 import com.example.messengerx.ui.theme.ThemeMessengerX
+import com.example.messengerx.view.StoriesAdd.StoriesBar
 import com.example.messengerx.view.chat.ChatItemCard
 import com.example.messengerx.view.chat.ChatViewModel
 import com.example.messengerx.view.chat.ChatViewModelFactory
@@ -34,9 +38,23 @@ import com.example.messengerx.view.contact.ContactsViewModel
 import dev.chrisbanes.haze.HazeState
 
 class MainActivity : ComponentActivity() {
+
+    // Регистрация камеры для получения результата
+    private val cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+        if (bitmap != null) {
+            // Здесь можно сохранить изображение или загрузить его на сервер
+        }
+    }
+
+    // Функция для открытия камеры
+    fun openCamera() {
+        cameraLauncher.launch()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Устанавливаем прозрачность окна
         window.setBackgroundDrawableResource(android.R.color.transparent)
         window.decorView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
         window.setFlags(
@@ -49,26 +67,26 @@ class MainActivity : ComponentActivity() {
         val isFirstLaunch = sharedPref.getBoolean("is_first_launch", true)
 
         if (isFirstLaunch) {
-            // Отмечаем, что первый запуск завершен
+            // Обновляем флаг первого запуска
             sharedPref.edit().putBoolean("is_first_launch", false).apply()
 
-            // Переход к WelcomeActivity
+            // Запускаем экран приветствия
             startActivity(Intent(this, WelcomeActivity::class.java))
-            finish() // Закрываем текущую активность
+            finish()
             return
         }
 
-        // Устанавливаем контент для MainActivity
+        // Устанавливаем основной контент
         setContent {
             ThemeMessengerX(isTransparent = true) {
-                MainScreen()
+                MainScreen(onAddStoryClick = { openCamera() }) // Передаём функцию открытия камеры
             }
         }
     }
 }
 
 @Composable
-fun MainScreen() {
+fun MainScreen(onAddStoryClick: () -> Unit) {
     val navController = rememberNavController()
     val hazeState = remember { HazeState() }
 
@@ -97,33 +115,35 @@ fun MainScreen() {
                 startDestination = "home"
             ) {
                 composable("home") {
-                    HomeScreen()
+                    HomeScreen(onAddStoryClick = onAddStoryClick)
                 }
                 composable("contacts") {
                     val viewModel: ContactsViewModel = viewModel()
                     ContactsScreen(viewModel)
                 }
             }
-
-
         }
     }
 }
-
-
-
 
 @Composable
 fun HomeScreen(
     chatViewModel: ChatViewModel = viewModel(
         factory = ChatViewModelFactory(LocalContext.current.applicationContext)
-    )
+    ),
+    onAddStoryClick: () -> Unit
 ) {
     val chatList by chatViewModel.chatList.collectAsState()
 
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(chatList) { chat ->
-            ChatItemCard(chat = chat)
+    Column {
+        // Добавляем StoriesBar для отображения историй
+        StoriesBar(onAddStoryClick = onAddStoryClick)
+
+        // Список чатов
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items(chatList) { chat ->
+                ChatItemCard(chat = chat)
+            }
         }
     }
 }
