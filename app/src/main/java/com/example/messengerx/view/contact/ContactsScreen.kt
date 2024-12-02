@@ -2,6 +2,7 @@ package com.example.messengerx.view.contact
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Sort
@@ -116,6 +117,7 @@ fun BottomSheetContent(onContactAdd: (String, String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .fillMaxHeight(0.9f)
             .padding(16.dp)
     ) {
         Text(text = "Добавить контакт", style = MaterialTheme.typography.titleMedium)
