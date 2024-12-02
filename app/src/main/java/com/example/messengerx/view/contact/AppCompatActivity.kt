@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.example.messengerx.R
 
 class AppCompatActivity : AppCompatActivity() {
 
@@ -38,7 +37,7 @@ class AppCompatActivity : AppCompatActivity() {
                 loadContacts()
             }
             shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS) -> {
-                
+
                 Toast.makeText(this, "Нужно разрешение для чтения контактов", Toast.LENGTH_LONG).show()
                 requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
             }

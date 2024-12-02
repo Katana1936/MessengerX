@@ -41,6 +41,8 @@ class ContactsViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+
+
     private fun fetchContacts(): List<Contact> {
         val resolver: ContentResolver = getApplication<Application>().contentResolver
         val contactList = mutableListOf<Contact>()
@@ -66,5 +68,13 @@ class ContactsViewModel(application: Application) : AndroidViewModel(application
             }
         }
         return contactList
+    }
+
+    fun addContact(name: String, phone: String) {
+        viewModelScope.launch {
+            val updatedContacts = _contacts.value.toMutableList()
+            updatedContacts.add(Contact(name, phone))
+            _contacts.value = updatedContacts
+        }
     }
 }
