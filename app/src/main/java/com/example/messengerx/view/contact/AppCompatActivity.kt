@@ -38,7 +38,7 @@ class AppCompatActivity : AppCompatActivity() {
                 loadContacts()
             }
             shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS) -> {
-                // Показать объяснение, почему нужно разрешение
+                
                 Toast.makeText(this, "Нужно разрешение для чтения контактов", Toast.LENGTH_LONG).show()
                 requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
             }
