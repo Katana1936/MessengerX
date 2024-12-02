@@ -13,7 +13,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.messengerx"
+        applicationId = "com.example.MessengerX"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
@@ -83,6 +83,4 @@ dependencies {
     implementation (libs.androidx.activity.ktx)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
-
-
 }

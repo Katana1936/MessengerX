@@ -114,7 +114,7 @@ fun MainScreen(onAddStoryClick: () -> Unit) {
 @Composable
 fun ChatsScreen(
     chatViewModel: ChatViewModel = viewModel(
-        factory = ChatViewModelFactory(LocalContext.current.applicationContext)
+        factory = ChatViewModelFactory() // Без аргументов
     ),
     onAddStoryClick: () -> Unit
 ) {
@@ -130,3 +130,4 @@ fun ChatsScreen(
         }
     }
 }
+

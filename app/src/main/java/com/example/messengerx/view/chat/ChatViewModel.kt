@@ -43,3 +43,4 @@ class ChatViewModelFactory : ViewModelProvider.Factory {
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+
