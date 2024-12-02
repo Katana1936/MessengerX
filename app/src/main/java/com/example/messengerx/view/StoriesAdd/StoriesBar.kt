@@ -29,18 +29,18 @@ fun StoriesBar(onAddStoryClick: () -> Unit) {
             .fillMaxWidth()
             .padding(8.dp)
     ) {
-        // Первый элемент: аватарка текущего пользователя с кнопкой добавления истории
+        // Первый элемент: добавление истории
         item {
-            Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
                     modifier = Modifier
                         .size(70.dp)
                         .clip(CircleShape)
-                        .background(Color.Gray) // Замените на изображение пользователя
+                        .background(Color.Gray)
                         .clickable { onAddStoryClick() }
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_add), // Иконка добавления
+                        painter = painterResource(id = R.drawable.ic_add),
                         contentDescription = "Добавить историю",
                         modifier = Modifier
                             .align(Alignment.Center)
@@ -52,37 +52,33 @@ fun StoriesBar(onAddStoryClick: () -> Unit) {
             }
         }
 
-        // Пример других историй
-        items(10) { index -> // Замените на реальный список контактов
+        // Добавление аватарок пользователей
+        items(10) { index -> // Замените на реальный список
             StoryAvatar(
-                name = "Контакт $index",
-                avatarUrl = null // URL аватарки, если есть
+                name = "Пользователь $index",
+                avatarResId = R.drawable.avatar // Используем вашу `avatar.xml`
             )
         }
     }
 }
 
 @Composable
-fun StoryAvatar(name: String, avatarUrl: String?) {
+fun StoryAvatar(name: String, avatarResId: Int) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = Modifier
                 .size(70.dp)
                 .clip(CircleShape)
-                .background(Color.Gray) // Используйте аватарку из `avatarUrl`
+                .background(Color.Gray)
         ) {
-            // Placeholder для аватарки
-            if (avatarUrl == null) {
-                Icon(
-                    painter = painterResource(id = R.drawable.avatar_carmen), // Иконка пользователя
-                    contentDescription = "Аватар",
-                    modifier = Modifier.align(Alignment.Center),
-                    tint = Color.White
-                )
-            } else {
-                // Загрузите изображение из URL (например, с Coil или Glide)
-            }
+            Icon(
+                painter = painterResource(id = avatarResId),
+                contentDescription = "Аватар",
+                modifier = Modifier.align(Alignment.Center),
+                tint = Color.White
+            )
         }
         Text(text = name, style = MaterialTheme.typography.bodySmall, maxLines = 1)
     }
 }
+
