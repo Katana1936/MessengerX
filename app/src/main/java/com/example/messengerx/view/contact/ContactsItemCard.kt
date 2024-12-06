@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun ContactsItemCard(contact: Contact, onClick: () -> Unit) {
+fun ContactsItemCard(contact: ContactResponse, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -45,4 +45,3 @@ fun ContactsItemCard(contact: Contact, onClick: () -> Unit) {
         }
     }
 }
-

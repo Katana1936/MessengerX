@@ -24,7 +24,7 @@ fun ChatItemCard(chat: ChatItem, onClick: () -> Unit = {}) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp)
-            .clickable { onClick() } // Открытие конкретного чата
+            .clickable { onClick() }
             .background(
                 brush = Brush.linearGradient(
                     colors = listOf(
@@ -51,28 +51,21 @@ fun ChatItemCard(chat: ChatItem, onClick: () -> Unit = {}) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = if (chat.isOnline) "Online" else "Last seen ${chat.lastSeen}",
+                    text = chat.lastMessage,
                     fontSize = 14.sp,
-                    color = if (chat.isOnline) Color.Green else Color.Gray
+                    color = Color.Gray
                 )
             }
         }
     }
 }
 
-
-
-data class ChatRequest(
-    val participants: List<String>,
-    val lastMessage: String,
-    val timestamp: Long
-)
-
-data class ChatResponse(
+data class ChatItem(
     val id: String,
-    val participants: List<String>,
-    val lastMessage: String,
-    val timestamp: Long
+    val name: String,
+    val isOnline: Boolean,
+    val lastSeen: String,
+    val lastMessage: String
 )
 
 

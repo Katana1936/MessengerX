@@ -83,4 +83,8 @@ dependencies {
     implementation (libs.androidx.activity.ktx)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.logging.interceptor)
+    implementation (libs.firebase.database.ktx)
 }

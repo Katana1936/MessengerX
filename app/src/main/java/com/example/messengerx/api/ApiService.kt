@@ -1,21 +1,44 @@
 package com.example.messengerx.api
 
-import com.example.messengerx.models.ChatRequest
-import com.example.messengerx.models.ChatResponse
-import com.example.messengerx.models.ContactRequest
-import com.example.messengerx.models.ContactResponse
-import retrofit2.http.*
+import com.example.messengerx.view.chat.ChatRequest
+import com.example.messengerx.view.chat.ChatResponse
+import com.example.messengerx.view.contact.ContactRequest
+import com.example.messengerx.view.contact.ContactResponse
+import retrofit2.Call
+import retrofit2.http.Body
+import retrofit2.http.DELETE
+import retrofit2.http.GET
+import retrofit2.http.Headers
+import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Path
 
 interface ApiService {
-    @GET("{node}.json")
-    suspend fun getData(@Path("node") node: String): Map<String, Any>
 
-    @POST("{node}.json")
-    suspend fun postData(@Path("node") node: String, @Body data: Any): Map<String, String>
+    @Headers("Accept: application/json")
+    @GET("contacts.json")
+    fun getContacts(): Call<Map<String, ContactResponse>>
 
-    @PUT("{node}/{id}.json")
-    suspend fun putData(@Path("node") node: String, @Path("id") id: String, @Body data: Any): Map<String, String>
+    @Headers("Accept: application/json")
+    @POST("contacts.json")
+    fun addContact(@Body request: ContactRequest): Call<Map<String, String>>
 
-    @DELETE("{node}/{id}.json")
-    suspend fun deleteData(@Path("node") node: String, @Path("id") id: String): Map<String, String>
+    @Headers("Accept: application/json")
+    @PUT("contacts/{id}.json")
+    fun updateContact(
+        @Path("id") id: String,
+        @Body request: ContactRequest
+    ): Call<Map<String, String>>
+
+    @Headers("Accept: application/json")
+    @DELETE("contacts/{id}.json")
+    fun deleteContact(@Path("id") id: String): Call<Map<String, String>>
+
+    @Headers("Accept: application/json")
+    @GET("chats.json")
+    fun getChats(): Call<Map<String, ChatResponse>>
+
+    @Headers("Accept: application/json")
+    @POST("chats.json")
+    fun createChat(@Body request: ChatRequest): Call<Map<String, String>>
 }

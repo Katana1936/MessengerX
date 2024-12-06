@@ -31,14 +31,12 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactsScreen(viewModel: ContactsViewModel, onContactClick: (String) -> Unit) {
-    val contacts by viewModel.filteredContacts.collectAsState()
+    val contactList by viewModel.filteredContacts.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Контакты") }
-            )
+            TopAppBar(title = { Text("Контакты") })
         }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
@@ -51,7 +49,7 @@ fun ContactsScreen(viewModel: ContactsViewModel, onContactClick: (String) -> Uni
                     .padding(8.dp)
             )
 
-            if (contacts.isEmpty()) {
+            if (contactList.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -62,7 +60,7 @@ fun ContactsScreen(viewModel: ContactsViewModel, onContactClick: (String) -> Uni
                 }
             } else {
                 LazyColumn {
-                    items(contacts) { contact ->
+                    items(contactList) { contact ->
                         ContactsItemCard(contact = contact) {
                             onContactClick(contact.id)
                         }
@@ -72,7 +70,6 @@ fun ContactsScreen(viewModel: ContactsViewModel, onContactClick: (String) -> Uni
         }
     }
 }
-
 
 
 @Composable

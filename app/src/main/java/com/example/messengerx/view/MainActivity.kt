@@ -8,11 +8,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -89,17 +92,26 @@ fun MainScreen() {
 }
 
 @Composable
-fun ChatsScreen(viewModel: ChatViewModel, onChatClick: (String) -> Unit) {
+fun ChatsScreen(viewModel: ChatViewModel = viewModel(), onChatClick: (String) -> Unit = {}) {
     val chatList by viewModel.chatList.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
-    Column {
-        StoriesBar(onAddStoryClick = {}) // Оставляем функционал для историй
-
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(chatList) { chat ->
-                ChatItemCard(chat = chat, onClick = { onChatClick(chat.id) })
+    Scaffold { padding ->
+        Column(modifier = Modifier.padding(padding)) {
+            if (!errorMessage.isNullOrEmpty()) {
+                Text(
+                    text = errorMessage!!,
+                    color = Color.Red,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+            LazyColumn {
+                items(chatList, key = { it.id }) { chat ->
+                    ChatItemCard(chat = chat) { onChatClick(chat.id) }
+                }
             }
         }
     }
 }
+
 

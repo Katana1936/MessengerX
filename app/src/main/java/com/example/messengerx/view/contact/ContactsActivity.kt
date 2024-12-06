@@ -14,7 +14,6 @@ class ContactsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Инициализация хелпера для работы с разрешениями
         val permissionHelper = ContactPermissionHelper(
             context = this,
             onPermissionGranted = { viewModel.loadContacts() }
@@ -25,7 +24,10 @@ class ContactsActivity : ComponentActivity() {
                 LaunchedEffect(Unit) {
                     permissionHelper.checkAndRequestPermission()
                 }
-                ContactsScreen(viewModel)
+                ContactsScreen(viewModel = viewModel) { contactId ->
+                    // Здесь можно обработать клик по контакту
+                    println("Клик по контакту с ID: $contactId")
+                }
             }
         }
     }

@@ -1,73 +1,73 @@
 package com.example.messengerx.view.chat
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import com.google.firebase.firestore.FirebaseFirestore
+import androidx.lifecycle.viewModelScope
+import com.example.messengerx.api.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class ChatViewModel : ViewModel() {
-    private val db = FirebaseFirestore.getInstance()
     private val _chatList = MutableStateFlow<List<ChatItem>>(emptyList())
     val chatList: StateFlow<List<ChatItem>> = _chatList
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage
 
     init {
         loadChats()
     }
 
-    // Загрузка всех чатов текущего пользователя
-    private fun loadChats() {
-        db.collection("chats")
-            .orderBy("timestamp")
-            .addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    println("Ошибка чтения чатов: ${e.message}")
-                    return@addSnapshotListener
+    fun loadChats() {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.getData("chats")
+                val chatItems = response.mapNotNull { (id, data) ->
+                    val participants = data["participants"] as? List<String> ?: return@mapNotNull null
+                    val lastMessage = data["lastMessage"] as? String ?: return@mapNotNull null
+                    val timestamp = (data["timestamp"] as? Double)?.toLong() ?: return@mapNotNull null
+
+                    val chatResponse = ChatResponse(
+                        id = id,
+                        participants = participants,
+                        lastMessage = lastMessage,
+                        timestamp = timestamp
+                    )
+                    convertToChatItem(chatResponse)
                 }
-                if (snapshot != null && !snapshot.isEmpty) {
-                    val chats = snapshot.documents.mapNotNull { doc ->
-                        doc.toObject(ChatItem::class.java)
-                    }
-                    _chatList.value = chats
-                }
+                _chatList.value = chatItems
+                _errorMessage.value = null
+            } catch (e: Exception) {
+                _errorMessage.value = "Не удалось загрузить чаты"
             }
+        }
     }
 
-    // Проверка на существование чата или его создание
-    fun createOrLoadChat(userId: String, contactId: String, onChatLoaded: (String) -> Unit) {
-        db.collection("chats")
-            .whereArrayContains("participants", userId)
-            .get()
-            .addOnSuccessListener { result ->
-                val chat = result.documents.firstOrNull { doc ->
-                    val participants = doc.get("participants") as? List<*>
-                    participants?.contains(contactId) == true
-                }
-
-                if (chat != null) {
-                    // Чат существует
-                    onChatLoaded(chat.id)
-                } else {
-                    // Создаем новый чат
-                    val newChat = hashMapOf(
-                        "participants" to listOf(userId, contactId),
-                        "lastMessage" to "",
-                        "timestamp" to System.currentTimeMillis()
-                    )
-
-                    db.collection("chats")
-                        .add(newChat)
-                        .addOnSuccessListener { documentReference ->
-                            onChatLoaded(documentReference.id)
-                        }
-                        .addOnFailureListener { e ->
-                            println("Ошибка создания чата: ${e.message}")
-                        }
-                }
-            }
-            .addOnFailureListener { e ->
-                println("Ошибка поиска чата: ${e.message}")
-            }
+    private fun convertToChatItem(response: ChatResponse): ChatItem {
+        return ChatItem(
+            id = response.id,
+            name = response.participants.joinToString(", "),
+            isOnline = response.isOnline,
+            lastSeen = response.lastSeen,
+            lastMessage = response.lastMessage
+        )
     }
 }
+
+data class ChatRequest(
+    val participants: List<String>,
+    val lastMessage: String,
+    val timestamp: Long
+)
+
+data class ChatResponse(
+    val id: String,
+    val participants: List<String>,
+    val lastMessage: String,
+    val timestamp: Long,
+    val isOnline: Boolean = false,
+    val lastSeen: String = "Unknown"
+)
+
+
+
