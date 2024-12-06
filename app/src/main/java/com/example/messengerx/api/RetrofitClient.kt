@@ -10,10 +10,10 @@ import retrofit2.converter.gson.GsonConverterFactory
 object RetrofitClient {
     private const val BASE_URL = "https://messengerx-df3ea-default-rtdb.europe-west1.firebasedatabase.app/"
 
-    private lateinit var retrofit: Retrofit
+    private var retrofit: Retrofit? = null
 
     fun getInstance(): ApiService {
-        if (!::retrofit.isInitialized) {
+        if (retrofit == null) {
             val loggingInterceptor = HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             }
@@ -38,6 +38,6 @@ object RetrofitClient {
                 .client(client)
                 .build()
         }
-        return retrofit.create(ApiService::class.java)
+        return retrofit!!.create(ApiService::class.java)
     }
 }

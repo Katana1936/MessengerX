@@ -98,6 +98,8 @@ fun ChatsScreen(viewModel: ChatViewModel = viewModel(), onChatClick: (String) ->
 
     Scaffold { padding ->
         Column(modifier = Modifier.padding(padding)) {
+            StoriesBar(onAddStoryClick = { /* Добавить логику добавления истории */ })
+
             if (!errorMessage.isNullOrEmpty()) {
                 Text(
                     text = errorMessage!!,
@@ -113,5 +115,3 @@ fun ChatsScreen(viewModel: ChatViewModel = viewModel(), onChatClick: (String) ->
         }
     }
 }
-
-
