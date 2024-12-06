@@ -4,8 +4,6 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.result.launch
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,7 +13,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -25,24 +22,11 @@ import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.StoriesAdd.StoriesBar
 import com.example.messengerx.view.chat.ChatItemCard
 import com.example.messengerx.view.chat.ChatViewModel
-import com.example.messengerx.view.chat.ChatViewModelFactory
-import com.example.messengerx.view.contact.ContactsScreen
-import com.example.messengerx.view.contact.ContactsViewModel
 import com.google.firebase.auth.FirebaseAuth
 import dev.chrisbanes.haze.HazeState
 
 class MainActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
-
-    private val cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-        if (bitmap != null) {
-            // Сохраните или загрузите изображение на сервер
-        }
-    }
-
-    fun openCamera() {
-        cameraLauncher.launch()
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,16 +42,17 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ThemeMessengerX(isTransparent = true) {
-                MainScreen(onAddStoryClick = { openCamera() })
+                MainScreen()
             }
         }
     }
 }
 
 @Composable
-fun MainScreen(onAddStoryClick: () -> Unit) {
+fun MainScreen() {
     val navController = rememberNavController()
     val hazeState = remember { HazeState() }
+    val chatViewModel: ChatViewModel = viewModel()
 
     Scaffold(
         bottomBar = {
@@ -94,38 +79,25 @@ fun MainScreen(onAddStoryClick: () -> Unit) {
                 startDestination = "chats"
             ) {
                 composable("chats") {
-                    ChatsScreen(onAddStoryClick = onAddStoryClick)
+                    ChatsScreen(chatViewModel) { chatId ->
+                        navController.navigate("chat/$chatId")
+                    }
                 }
-                composable("contacts") {
-                    val viewModel: ContactsViewModel = viewModel()
-                    ContactsScreen(viewModel)
-                }
-                //composable("account") {
-                //    AccountScreen() // Реализуйте экран аккаунта
-                //}
-                //composable("settings") {
-                //   SettingsScreen() // Реализуйте экран настроек
-                //}
             }
         }
     }
 }
 
 @Composable
-fun ChatsScreen(
-    chatViewModel: ChatViewModel = viewModel(
-        factory = ChatViewModelFactory() // Без аргументов
-    ),
-    onAddStoryClick: () -> Unit
-) {
-    val chatList by chatViewModel.chatList.collectAsState()
+fun ChatsScreen(viewModel: ChatViewModel, onChatClick: (String) -> Unit) {
+    val chatList by viewModel.chatList.collectAsState()
 
     Column {
-        StoriesBar(onAddStoryClick = onAddStoryClick)
+        StoriesBar(onAddStoryClick = {}) // Оставляем функционал для историй
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(chatList) { chat ->
-                ChatItemCard(chat = chat)
+                ChatItemCard(chat = chat, onClick = { onChatClick(chat.id) })
             }
         }
     }

@@ -9,8 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-data class Contact(val name: String, val phone: String)
-
 class ContactsViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _contacts = MutableStateFlow<List<Contact>>(emptyList())
@@ -24,8 +22,7 @@ class ContactsViewModel(application: Application) : AndroidViewModel(application
             contacts
         } else {
             contacts.filter {
-                it.name.contains(query, ignoreCase = true) ||
-                        it.phone.contains(query)
+                it.name.contains(query, ignoreCase = true) || it.phone.contains(query)
             }
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -36,12 +33,14 @@ class ContactsViewModel(application: Application) : AndroidViewModel(application
 
     fun loadContacts() {
         viewModelScope.launch(Dispatchers.IO) {
-            val contacts = fetchContacts()
-            _contacts.value = contacts
+            try {
+                val contacts = fetchContacts()
+                _contacts.value = contacts
+            } catch (e: Exception) {
+                println("Ошибка загрузки контактов: ${e.message}")
+            }
         }
     }
-
-
 
     private fun fetchContacts(): List<Contact> {
         val resolver: ContentResolver = getApplication<Application>().contentResolver
@@ -64,7 +63,8 @@ class ContactsViewModel(application: Application) : AndroidViewModel(application
             while (it.moveToNext()) {
                 val name = it.getString(nameIndex)
                 val phone = it.getString(numberIndex)
-                contactList.add(Contact(name, phone))
+                val id = phone.hashCode().toString() // Используем хэш от номера как уникальный ID
+                contactList.add(Contact(id = id, name = name, phone = phone))
             }
         }
         return contactList
@@ -72,9 +72,24 @@ class ContactsViewModel(application: Application) : AndroidViewModel(application
 
     fun addContact(name: String, phone: String) {
         viewModelScope.launch {
+            val id = phone.hashCode().toString() // Генерируем уникальный ID для нового контакта
             val updatedContacts = _contacts.value.toMutableList()
-            updatedContacts.add(Contact(name, phone))
+            updatedContacts.add(Contact(id = id, name = name, phone = phone))
             _contacts.value = updatedContacts
         }
     }
 }
+
+
+
+data class ContactRequest(
+    val name: String,
+    val phone: String
+)
+
+data class ContactResponse(
+    val id: String,
+    val name: String,
+    val phone: String
+)
+

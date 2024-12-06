@@ -28,6 +28,7 @@ class RegistrationActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         auth = FirebaseAuth.getInstance()
 
         setContent {
@@ -38,21 +39,22 @@ class RegistrationActivity : ComponentActivity() {
                         .background(registrationGradient)
                 ) {
                     RegistrationScreen(onRegisterSuccess = { email, password ->
-                        auth.createUserWithEmailAndPassword(email, password)
-                            .addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-                                    val sharedPref = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-                                    sharedPref.edit().putBoolean("is_logged_in", true).apply()
-                                    navigateToMain()
-                                } else {
-                                    // Вывод ошибки или уведомление
-                                    println("Ошибка регистрации: ${task.exception?.message}")
-                                }
-                            }
+                        registerUser(email, password)
                     })
                 }
             }
         }
+    }
+
+    private fun registerUser(email: String, password: String) {
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    navigateToMain()
+                } else {
+                    println("Ошибка регистрации: ${task.exception?.message}")
+                }
+            }
     }
 
     private fun navigateToMain() {
@@ -62,10 +64,13 @@ class RegistrationActivity : ComponentActivity() {
     }
 }
 
+
 @Composable
 fun RegistrationScreen(onRegisterSuccess: (String, String) -> Unit) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -90,9 +95,26 @@ fun RegistrationScreen(onRegisterSuccess: (String, String) -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation()
         )
-        Spacer(modifier = Modifier.height(20.dp))
-        Button(onClick = { onRegisterSuccess(email, password) }) {
-            Text("Зареєструватись")
+        Spacer(modifier = Modifier.height(10.dp))
+        if (errorMessage.isNotEmpty()) {
+            Text(errorMessage, color = Color.Red)
+            Spacer(modifier = Modifier.height(10.dp))
+        }
+        if (isLoading) {
+            CircularProgressIndicator()
+        } else {
+            Button(onClick = {
+                if (email.isNotBlank() && password.isNotBlank()) {
+                    isLoading = true
+                    errorMessage = ""
+                    onRegisterSuccess(email, password)
+                } else {
+                    errorMessage = "Заполните все поля"
+                }
+            }) {
+                Text("Зареєструватись")
+            }
         }
     }
 }
+

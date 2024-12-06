@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 
 class ChatViewModel : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
@@ -15,6 +16,7 @@ class ChatViewModel : ViewModel() {
         loadChats()
     }
 
+    // Загрузка всех чатов текущего пользователя
     private fun loadChats() {
         db.collection("chats")
             .orderBy("timestamp")
@@ -31,16 +33,41 @@ class ChatViewModel : ViewModel() {
                 }
             }
     }
-}
 
+    // Проверка на существование чата или его создание
+    fun createOrLoadChat(userId: String, contactId: String, onChatLoaded: (String) -> Unit) {
+        db.collection("chats")
+            .whereArrayContains("participants", userId)
+            .get()
+            .addOnSuccessListener { result ->
+                val chat = result.documents.firstOrNull { doc ->
+                    val participants = doc.get("participants") as? List<*>
+                    participants?.contains(contactId) == true
+                }
 
-class ChatViewModelFactory : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(ChatViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return ChatViewModel() as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
+                if (chat != null) {
+                    // Чат существует
+                    onChatLoaded(chat.id)
+                } else {
+                    // Создаем новый чат
+                    val newChat = hashMapOf(
+                        "participants" to listOf(userId, contactId),
+                        "lastMessage" to "",
+                        "timestamp" to System.currentTimeMillis()
+                    )
+
+                    db.collection("chats")
+                        .add(newChat)
+                        .addOnSuccessListener { documentReference ->
+                            onChatLoaded(documentReference.id)
+                        }
+                        .addOnFailureListener { e ->
+                            println("Ошибка создания чата: ${e.message}")
+                        }
+                }
+            }
+            .addOnFailureListener { e ->
+                println("Ошибка поиска чата: ${e.message}")
+            }
     }
 }
-

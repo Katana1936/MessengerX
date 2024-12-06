@@ -24,7 +24,7 @@ fun ChatItemCard(chat: ChatItem, onClick: () -> Unit = {}) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp)
-            .clickable { onClick() }
+            .clickable { onClick() } // Открытие конкретного чата
             .background(
                 brush = Brush.linearGradient(
                     colors = listOf(
@@ -61,10 +61,21 @@ fun ChatItemCard(chat: ChatItem, onClick: () -> Unit = {}) {
 }
 
 
-data class ChatItem(
-    val name: String = "",
-    val isOnline: Boolean = false,
-    val lastSeen: String = "",
-    val timestamp: Long = 0
+
+data class ChatRequest(
+    val participants: List<String>,
+    val lastMessage: String,
+    val timestamp: Long
 )
+
+data class ChatResponse(
+    val id: String,
+    val participants: List<String>,
+    val lastMessage: String,
+    val timestamp: Long
+)
+
+
+
+
 

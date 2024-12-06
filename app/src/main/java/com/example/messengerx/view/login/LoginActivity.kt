@@ -1,6 +1,5 @@
 package com.example.messengerx.view.login
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -29,14 +28,8 @@ class LoginActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        auth = FirebaseAuth.getInstance()
 
-        val sharedPref = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val isLoggedIn = sharedPref.getBoolean("is_logged_in", false)
-        if (isLoggedIn) {
-            navigateToMain()
-            return
-        }
+        auth = FirebaseAuth.getInstance()
 
         setContent {
             ThemeMessengerX {
@@ -47,22 +40,24 @@ class LoginActivity : ComponentActivity() {
                 ) {
                     LoginScreen(
                         onLogin = { email, password ->
-                            auth.signInWithEmailAndPassword(email, password)
-                                .addOnCompleteListener { task ->
-                                    if (task.isSuccessful) {
-                                        sharedPref.edit().putBoolean("is_logged_in", true).apply()
-                                        navigateToMain()
-                                    } else {
-                                        // Обработать ошибку
-                                        println("Ошибка входа: ${task.exception?.message}")
-                                    }
-                                }
+                            loginUser(email, password)
                         },
                         onRegisterClick = { navigateToRegistration() }
                     )
                 }
             }
         }
+    }
+
+    private fun loginUser(email: String, password: String) {
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    navigateToMain()
+                } else {
+                    println("Ошибка входа: ${task.exception?.message}")
+                }
+            }
     }
 
     private fun navigateToMain() {
@@ -76,10 +71,13 @@ class LoginActivity : ComponentActivity() {
     }
 }
 
+
 @Composable
 fun LoginScreen(onLogin: (String, String) -> Unit, onRegisterClick: () -> Unit) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -104,12 +102,28 @@ fun LoginScreen(onLogin: (String, String) -> Unit, onRegisterClick: () -> Unit) 
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation()
         )
-        Spacer(modifier = Modifier.height(20.dp))
-        Button(onClick = { onLogin(email, password) }) {
-            Text("Увійти")
+        Spacer(modifier = Modifier.height(10.dp))
+        if (errorMessage.isNotEmpty()) {
+            Text(errorMessage, color = Color.Red)
+            Spacer(modifier = Modifier.height(10.dp))
+        }
+        if (isLoading) {
+            CircularProgressIndicator()
+        } else {
+            Button(onClick = {
+                if (email.isNotBlank() && password.isNotBlank()) {
+                    isLoading = true
+                    errorMessage = ""
+                    onLogin(email, password)
+                } else {
+                    errorMessage = "Заполните все поля"
+                }
+            }) {
+                Text("Увійти")
+            }
         }
         Spacer(modifier = Modifier.height(10.dp))
-        TextButton(onClick = { onRegisterClick() }) {
+        TextButton(onClick = onRegisterClick) {
             Text("Немає аккаунта? Зареєструватися", color = Color.White)
         }
     }
