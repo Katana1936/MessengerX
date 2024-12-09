@@ -81,13 +81,15 @@ data class ChatRequest(
 )
 
 data class ChatResponse(
-    val id: String,
-    val participants: List<String>?,
-    val lastMessage: String?,
-    val timestamp: Long?,
     val isOnline: Boolean = false,
-    val lastSeen: String? = "Unknown"
+    val lastSeen: String = "",
+    val participants: List<String> = emptyList(),
+    val name: String = "",
+    val timestamp: Long = 0L,
+    val lastMessage: String = ""
 )
+
+
 
 data class MessageRequest(
     val senderId: String,

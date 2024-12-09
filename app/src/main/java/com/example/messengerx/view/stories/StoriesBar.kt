@@ -1,29 +1,41 @@
-package com.example.messengerx.view.StoriesAdd
+package com.example.messengerx.view.stories
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import coil.compose.rememberImagePainter
 import com.example.messengerx.R
 
-
 @Composable
-fun StoriesBar(onAddStoryClick: () -> Unit) {
+fun StoriesBar(viewModel: StoryViewModel, userId: String, onAddStoryClick: () -> Unit) {
+    val stories by viewModel.stories.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+
+    // Загружаем истории
+    LaunchedEffect(userId) {
+        viewModel.fetchStories(userId)
+    }
+
+    if (!errorMessage.isNullOrEmpty()) {
+        Text(
+            text = errorMessage,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.padding(8.dp)
+        )
+    }
+
     LazyRow(
         modifier = Modifier
             .fillMaxWidth()
@@ -52,33 +64,30 @@ fun StoriesBar(onAddStoryClick: () -> Unit) {
             }
         }
 
-        // Добавление аватарок пользователей
-        items(10) { index -> // Замените на реальный список
-            StoryAvatar(
-                name = "Пользователь $index",
-                avatarResId = R.drawable.avatar // Используем вашу `avatar.xml`
-            )
+        // Отображение историй
+        items(stories) { story ->
+            StoryAvatar(name = story.caption, imageUrl = story.imageUrl)
         }
     }
 }
 
+
 @Composable
-fun StoryAvatar(name: String, avatarResId: Int) {
+fun StoryAvatar(name: String, imageUrl: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = Modifier
                 .size(70.dp)
                 .clip(CircleShape)
-                .background(Color.Gray)
         ) {
-            Icon(
-                painter = painterResource(id = avatarResId),
-                contentDescription = "Аватар",
-                modifier = Modifier.align(Alignment.Center),
-                tint = Color.White
+            androidx.compose.foundation.Image(
+                painter = rememberImagePainter(imageUrl),
+                contentDescription = "История",
+                modifier = Modifier.fillMaxSize()
             )
         }
         Text(text = name, style = MaterialTheme.typography.bodySmall, maxLines = 1)
     }
 }
+
 

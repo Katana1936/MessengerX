@@ -4,11 +4,16 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -21,9 +26,11 @@ import com.example.messengerx.BottomNavigationBar
 import com.example.messengerx.api.ApiService
 import com.example.messengerx.api.RetrofitClient
 import com.example.messengerx.ui.theme.ThemeMessengerX
-import com.example.messengerx.view.chat.ChatItem
+import com.example.messengerx.view.stories.StoriesBar
+import com.example.messengerx.view.stories.StoryViewModel
 import com.example.messengerx.view.chat.ChatItemCard
 import com.example.messengerx.view.chat.ChatScreen
+import com.example.messengerx.view.chat.ChatViewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var apiService: ApiService
@@ -51,30 +58,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(apiService: ApiService) {
     val navController = rememberNavController()
-    var chatList by remember { mutableStateOf<List<ChatItem>>(emptyList()) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    // Загружаем чаты при создании экрана
-    LaunchedEffect(Unit) {
-        try {
-            val response = apiService.getChats().execute()
-            if (response.isSuccessful) {
-                chatList = response.body()?.map { (id, chatResponse) ->
-                    ChatItem(
-                        id = id,
-                        name = chatResponse.participants?.joinToString(", ") ?: "Unknown",
-                        isOnline = chatResponse.isOnline,
-                        lastSeen = chatResponse.lastSeen ?: "Unknown",
-                        lastMessage = chatResponse.lastMessage ?: "No message"
-                    )
-                } ?: emptyList()
-            } else {
-                errorMessage = "Ошибка загрузки чатов: ${response.message()}"
-            }
-        } catch (e: Exception) {
-            errorMessage = "Ошибка: ${e.localizedMessage}"
-        }
-    }
+    val storyViewModel: StoryViewModel = remember { StoryViewModel() } // Экземпляр ViewModel
 
     Scaffold(
         bottomBar = {
@@ -97,11 +81,15 @@ fun MainScreen(apiService: ApiService) {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable("chats") {
-                ChatsScreen(
-                    chatList = chatList,
-                    errorMessage = errorMessage
-                ) { chatId ->
-                    navController.navigate("chat/$chatId")
+                Column {
+                    StoriesBar(
+                        viewModel = storyViewModel,
+                        userId = "user1", // Текущий пользователь
+                        onAddStoryClick = { /* Реализуйте добавление истории */ }
+                    )
+                    ChatsScreen(apiService = apiService) { chatId ->
+                        navController.navigate("chat/$chatId")
+                    }
                 }
             }
             composable("contacts") {
@@ -118,17 +106,24 @@ fun MainScreen(apiService: ApiService) {
     }
 }
 
+
+
 @Composable
-fun ChatsScreen(
-    chatList: List<ChatItem>,
-    errorMessage: String?,
-    onChatClick: (String) -> Unit
-) {
+fun ChatsScreen(viewModel: ChatViewModel, onChatClick: (String) -> Unit) {
+    val chatList by viewModel.chatList.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+
     Scaffold { padding ->
         Column(modifier = Modifier.padding(padding)) {
+            // Добавляем StoriesBar
+            StoriesBar(onAddStoryClick = { capturedUri ->
+                // Обработайте загруженное изображение
+                println("Story added with URI: $capturedUri")
+            })
+
             if (!errorMessage.isNullOrEmpty()) {
                 Text(
-                    text = errorMessage,
+                    text = "Ошибка: $errorMessage",
                     color = Color.Red,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -144,8 +139,7 @@ fun ChatsScreen(
     }
 }
 
-@Composable
-fun ContactsActivityContent() {
-    Text("Контакты еще не реализованы") // Заглушка для экрана контактов
-}
+
+
+
 
