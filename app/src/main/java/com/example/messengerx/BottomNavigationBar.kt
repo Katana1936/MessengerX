@@ -1,5 +1,6 @@
 package com.example.messengerx
 
+import android.content.Intent
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -13,13 +14,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.messengerx.ui.theme.white
-import dev.chrisbanes.haze.HazeProgressive
+import com.example.messengerx.view.contact.ContactsActivity
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -35,10 +35,10 @@ fun BottomNavigationBar(
     backgroundColor: Color = Color.Transparent,
     blurRadius: Dp = 25.dp,
     tintColors: List<Color> = listOf(Color.White.copy(alpha = 0.1f)),
-    noiseFactor: Float = 0.0f,
-    progressive: HazeProgressive? = null,
-    mask: Brush? = null
+    noiseFactor: Float = 0.0f
 ) {
+    val context = LocalContext.current // Получаем context здесь
+
     var selectedItem by remember { mutableStateOf(0) }
 
     val items = listOf("Чаты", "Контакты", "Аккаунт", "Настройки")
@@ -55,16 +55,9 @@ fun BottomNavigationBar(
         painterResource(id = R.drawable.ic_settings)
     )
 
-    val hazeStyle = CustomHazeStyle(
-        backgroundColor = backgroundColor,
-        blurRadius = blurRadius,
-        tintColors = tintColors,
-        noiseFactor = noiseFactor
-    )
-
     NavigationBar(
         modifier = modifier
-            .hazeChild(state = hazeState, style = hazeStyle)
+            .hazeChild(state = hazeState, style = CustomHazeStyle())
             .fillMaxWidth(),
         containerColor = Color.Transparent
     ) {
@@ -88,6 +81,12 @@ fun BottomNavigationBar(
                 onClick = {
                     selectedItem = index
                     onItemSelected(item)
+
+                    if (item == "Контакты") {
+                        // Используем context для запуска ContactsActivity
+                        val intent = Intent(context, ContactsActivity::class.java)
+                        context.startActivity(intent)
+                    }
                 },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = Color.White,
@@ -99,8 +98,6 @@ fun BottomNavigationBar(
         }
     }
 }
-
-
 
 
 @Composable

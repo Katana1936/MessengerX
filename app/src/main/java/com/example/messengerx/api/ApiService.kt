@@ -2,6 +2,8 @@ package com.example.messengerx.api
 
 import com.example.messengerx.view.chat.ChatRequest
 import com.example.messengerx.view.chat.ChatResponse
+import com.example.messengerx.view.chat.MessageRequest
+import com.example.messengerx.view.chat.MessageResponse
 import com.example.messengerx.view.contact.ContactRequest
 import com.example.messengerx.view.contact.ContactResponse
 import retrofit2.Call

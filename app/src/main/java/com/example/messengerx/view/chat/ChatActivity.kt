@@ -152,16 +152,3 @@ fun MessageItem(message: MessageResponse) {
 
 
 
-data class MessageRequest(
-    val senderId: String,
-    val message: String,
-    val timestamp: Long
-)
-
-data class MessageResponse(
-    val senderId: String,
-    val message: String,
-    val timestamp: Long
-)
-
-
