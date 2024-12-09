@@ -25,7 +25,7 @@ class ChatViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = withContext(Dispatchers.IO) {
-                    RetrofitClient.getInstance().getChats().awaitResponse()
+                    RetrofitClient.getInstance(context).getChats().awaitResponse()
                 }
 
                 if (response.isSuccessful) {

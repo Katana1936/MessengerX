@@ -21,7 +21,7 @@ object RetrofitClient {
 
             val authInterceptor = Interceptor { chain ->
                 val token = runBlocking {
-                    TokenDataStoreManager(context).token.first() // Получаем токен из DataStore
+                    TokenDataStoreManager(context).token.first()
                 }
                 val requestBuilder = chain.request().newBuilder()
                 if (!token.isNullOrEmpty()) {

@@ -98,8 +98,6 @@ fun ChatsScreen(viewModel: ChatViewModel = viewModel(), onChatClick: (String) ->
 
     Scaffold { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            StoriesBar(onAddStoryClick = { /* Добавить логику добавления истории */ })
-
             if (!errorMessage.isNullOrEmpty()) {
                 Text(
                     text = errorMessage!!,
@@ -109,9 +107,13 @@ fun ChatsScreen(viewModel: ChatViewModel = viewModel(), onChatClick: (String) ->
             }
             LazyColumn {
                 items(chatList, key = { it.id }) { chat ->
-                    ChatItemCard(chat = chat) { onChatClick(chat.id) }
+                    ChatItemCard(chat = chat) {
+                        // Передаем ID чата в `onChatClick`
+                        onChatClick(chat.id)
+                    }
                 }
             }
         }
     }
 }
+
