@@ -99,11 +99,13 @@ fun MainScreen(apiService: ApiService) {
             composable("chats") {
                 ChatsScreen(
                     chatList = chatList,
-                    errorMessage = errorMessage,
-                    onChatClick = { chatId ->
-                        navController.navigate("chat/$chatId")
-                    }
-                )
+                    errorMessage = errorMessage
+                ) { chatId ->
+                    navController.navigate("chat/$chatId")
+                }
+            }
+            composable("contacts") {
+                ContactsActivityContent()
             }
             composable(
                 route = "chat/{chatId}",
@@ -141,3 +143,9 @@ fun ChatsScreen(
         }
     }
 }
+
+@Composable
+fun ContactsActivityContent() {
+    Text("Контакты еще не реализованы") // Заглушка для экрана контактов
+}
+
