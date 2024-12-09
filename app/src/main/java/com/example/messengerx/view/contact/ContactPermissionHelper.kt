@@ -9,18 +9,19 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 
 class ContactPermissionHelper(
-    private val context: Context,
+    activity: ComponentActivity,
     private val onPermissionGranted: () -> Unit
 ) {
+    private val context = activity.applicationContext
+
     private val requestPermissionLauncher =
-        (context as? ComponentActivity)
-            ?.registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-                if (isGranted) {
-                    onPermissionGranted()
-                } else {
-                    Toast.makeText(context, "Доступ к контактам отклонен", Toast.LENGTH_SHORT).show()
-                }
+        activity.registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                onPermissionGranted()
+            } else {
+                Toast.makeText(context, "Доступ к контактам отклонен", Toast.LENGTH_SHORT).show()
             }
+        }
 
     fun checkAndRequestPermission() {
         when {

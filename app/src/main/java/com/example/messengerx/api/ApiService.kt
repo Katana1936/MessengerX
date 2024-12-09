@@ -42,3 +42,4 @@ interface ApiService {
     @POST("chats.json")
     fun createChat(@Body request: ChatRequest): Call<Map<String, String>>
 }
+

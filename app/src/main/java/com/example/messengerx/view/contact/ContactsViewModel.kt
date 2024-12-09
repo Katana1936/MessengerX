@@ -8,8 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import com.example.messengerx.api.ApiService
-
+import retrofit2.awaitResponse
 
 class ContactsViewModel : ViewModel() {
 
@@ -36,16 +35,22 @@ class ContactsViewModel : ViewModel() {
     fun loadContacts() {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.apiService.getData("contacts")
-                val contacts = response.map { (id, value) ->
-                    val data = value as Map<String, Any>
-                    ContactResponse(
-                        id = id,
-                        name = data["name"] as String,
-                        phone = data["phone"] as String
-                    )
+                val response = RetrofitClient.apiService.getContacts().awaitResponse()
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    body?.let { contactsMap ->
+                        val contacts = contactsMap.map { (id, value) ->
+                            ContactResponse(
+                                id = id,
+                                name = value.name,
+                                phone = value.phone
+                            )
+                        }
+                        _contacts.value = contacts
+                    }
+                } else {
+                    println("Ошибка загрузки контактов: ${response.errorBody()?.string()}")
                 }
-                _contacts.value = contacts
             } catch (e: Exception) {
                 println("Ошибка загрузки контактов: ${e.message}")
             }
@@ -56,8 +61,12 @@ class ContactsViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val contactRequest = ContactRequest(name = name, phone = phone)
-                RetrofitClient.apiService.postData("contacts", contactRequest)
-                loadContacts()
+                val response = RetrofitClient.apiService.addContact(contactRequest).awaitResponse()
+                if (response.isSuccessful) {
+                    loadContacts()
+                } else {
+                    println("Ошибка добавления контакта: ${response.errorBody()?.string()}")
+                }
             } catch (e: Exception) {
                 println("Ошибка добавления контакта: ${e.message}")
             }
@@ -67,15 +76,18 @@ class ContactsViewModel : ViewModel() {
     fun deleteContact(contactId: String) {
         viewModelScope.launch {
             try {
-                RetrofitClient.apiService.deleteData("contacts", contactId)
-                loadContacts()
+                val response = RetrofitClient.apiService.deleteContact(contactId).awaitResponse()
+                if (response.isSuccessful) {
+                    loadContacts()
+                } else {
+                    println("Ошибка удаления контакта: ${response.errorBody()?.string()}")
+                }
             } catch (e: Exception) {
                 println("Ошибка удаления контакта: ${e.message}")
             }
         }
     }
 }
-
 
 data class ContactRequest(
     val name: String,
@@ -87,4 +99,3 @@ data class ContactResponse(
     val name: String,
     val phone: String
 )
-
