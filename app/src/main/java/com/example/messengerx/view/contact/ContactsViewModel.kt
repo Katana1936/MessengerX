@@ -2,7 +2,7 @@ package com.example.messengerx.view.contact
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.messengerx.api.RetrofitClient
+import com.example.messengerx.api.ApiService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import retrofit2.awaitResponse
 
-class ContactsViewModel : ViewModel() {
+class ContactsViewModel(private val apiService: ApiService) : ViewModel() {
 
     private val _contacts = MutableStateFlow<List<ContactResponse>>(emptyList())
     val contacts: StateFlow<List<ContactResponse>> = _contacts
@@ -35,24 +35,15 @@ class ContactsViewModel : ViewModel() {
     fun loadContacts() {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.apiService.getContacts().awaitResponse()
+                val response = apiService.getContacts().awaitResponse()
                 if (response.isSuccessful) {
-                    val body = response.body()
-                    body?.let { contactsMap ->
-                        val contacts = contactsMap.map { (id, value) ->
-                            ContactResponse(
-                                id = id,
-                                name = value.name,
-                                phone = value.phone
-                            )
-                        }
-                        _contacts.value = contacts
-                    }
-                } else {
-                    println("Ошибка загрузки контактов: ${response.errorBody()?.string()}")
+                    val contactsList = response.body()?.map { (id, contact) ->
+                        ContactResponse(id, contact.name, contact.phone)
+                    } ?: emptyList()
+                    _contacts.value = contactsList
                 }
             } catch (e: Exception) {
-                println("Ошибка загрузки контактов: ${e.message}")
+                println("Ошибка загрузки контактов: ${e.localizedMessage}")
             }
         }
     }
@@ -60,15 +51,13 @@ class ContactsViewModel : ViewModel() {
     fun addContact(name: String, phone: String) {
         viewModelScope.launch {
             try {
-                val contactRequest = ContactRequest(name = name, phone = phone)
-                val response = RetrofitClient.apiService.addContact(contactRequest).awaitResponse()
+                val request = ContactRequest(name, phone)
+                val response = apiService.addContact(request).awaitResponse()
                 if (response.isSuccessful) {
                     loadContacts()
-                } else {
-                    println("Ошибка добавления контакта: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
-                println("Ошибка добавления контакта: ${e.message}")
+                println("Ошибка добавления контакта: ${e.localizedMessage}")
             }
         }
     }
@@ -76,19 +65,16 @@ class ContactsViewModel : ViewModel() {
     fun deleteContact(contactId: String) {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.apiService.deleteContact(contactId).awaitResponse()
+                val response = apiService.deleteContact(contactId).awaitResponse()
                 if (response.isSuccessful) {
                     loadContacts()
-                } else {
-                    println("Ошибка удаления контакта: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
-                println("Ошибка удаления контакта: ${e.message}")
+                println("Ошибка удаления контакта: ${e.localizedMessage}")
             }
         }
     }
 }
-
 data class ContactRequest(
     val name: String,
     val phone: String

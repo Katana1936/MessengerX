@@ -3,13 +3,9 @@ package com.example.messengerx.view.chat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.messengerx.api.ApiService
-import com.example.messengerx.api.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import retrofit2.awaitResponse
 
 class ChatViewModel(private val apiService: ApiService) : ViewModel() {
     private val _chatList = MutableStateFlow<List<ChatItem>>(emptyList())
@@ -67,7 +63,7 @@ class ChatViewModel(private val apiService: ApiService) : ViewModel() {
                 val messageRequest = MessageRequest(senderId, message, System.currentTimeMillis())
                 val response = apiService.sendMessage(chatId, messageRequest).execute()
                 if (response.isSuccessful) {
-                    loadMessages(chatId) // Обновляем сообщения
+                    loadMessages(chatId)
                 } else {
                     _errorMessage.value = "Ошибка отправки сообщения: ${response.message()}"
                 }
