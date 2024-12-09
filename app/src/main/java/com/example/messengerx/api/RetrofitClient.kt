@@ -13,16 +13,13 @@ object RetrofitClient {
     private const val BASE_URL = "https://messengerx-df3ea-default-rtdb.europe-west1.firebasedatabase.app/"
     private lateinit var retrofit: Retrofit
 
-    fun getInstance(context: Context): ApiService {
+    fun getInstance(token: String? = null): ApiService {
         if (!::retrofit.isInitialized) {
             val loggingInterceptor = HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             }
 
             val authInterceptor = Interceptor { chain ->
-                val token = runBlocking {
-                    TokenDataStoreManager(context).token.first()
-                }
                 val requestBuilder = chain.request().newBuilder()
                 if (!token.isNullOrEmpty()) {
                     requestBuilder.addHeader("Authorization", "Bearer $token")
@@ -44,3 +41,4 @@ object RetrofitClient {
         return retrofit.create(ApiService::class.java)
     }
 }
+

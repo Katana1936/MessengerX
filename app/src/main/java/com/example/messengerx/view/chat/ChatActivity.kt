@@ -6,28 +6,40 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
 import com.example.messengerx.ui.theme.ThemeMessengerX
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.messengerx.api.RetrofitClient
+import com.example.messengerx.view.chat.ChatViewModel
+import com.example.messengerx.view.chat.ChatViewModelFactory
 
 class ChatActivity : ComponentActivity() {
+    private lateinit var chatViewModel: ChatViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Получаем ID чата из Intent
+        val apiService = RetrofitClient().createApiService()
+        chatViewModel = ViewModelProvider(this, ChatViewModelFactory(apiService))[ChatViewModel::class.java]
+
         val chatId = intent.getStringExtra("chatId") ?: return
 
         setContent {
             ThemeMessengerX {
-                ChatScreen(chatId = chatId)
+                ChatScreen(chatId = chatId, viewModel = chatViewModel)
             }
         }
     }
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(chatId: String, viewModel: ChatViewModel = viewModel()) {
     val messages by viewModel.messages.collectAsState()
@@ -101,3 +113,10 @@ fun MessageItem(message: MessageResponse) {
         )
     }
 }
+data class MessageResponse(
+    val senderId: String,
+    val message: String,
+    val timestamp: Long
+)
+
+

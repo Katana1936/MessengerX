@@ -17,13 +17,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.messengerx.BottomNavigationBar
 import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.StoriesAdd.StoriesBar
 import com.example.messengerx.view.chat.ChatItemCard
+import com.example.messengerx.view.chat.ChatScreen
 import com.example.messengerx.view.chat.ChatViewModel
 import com.google.firebase.auth.FirebaseAuth
 import dev.chrisbanes.haze.HazeState
@@ -54,42 +57,45 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
-    val hazeState = remember { HazeState() }
     val chatViewModel: ChatViewModel = viewModel()
 
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
-                hazeState = hazeState,
+                hazeState = HazeState(),
                 onItemSelected = { route ->
                     when (route) {
-                        "Чаты" -> navController.navigate("chats") { launchSingleTop = true }
-                        "Контакты" -> navController.navigate("contacts") { launchSingleTop = true }
-                        "Аккаунт" -> navController.navigate("account") { launchSingleTop = true }
-                        "Настройки" -> navController.navigate("settings") { launchSingleTop = true }
+                        "Чаты" -> navController.navigate("chats")
+                        "Контакты" -> navController.navigate("contacts")
+                        "Аккаунт" -> navController.navigate("account")
+                        "Настройки" -> navController.navigate("settings")
                     }
                 }
             )
         }
     ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
+        NavHost(
+            navController = navController,
+            startDestination = "chats",
+            modifier = Modifier.padding(innerPadding)
         ) {
-            NavHost(
-                navController = navController,
-                startDestination = "chats"
-            ) {
-                composable("chats") {
-                    ChatsScreen(chatViewModel) { chatId ->
-                        navController.navigate("chat/$chatId")
-                    }
+            composable("chats") {
+                ChatsScreen(chatViewModel) { chatId ->
+                    navController.navigate("chat/$chatId")
                 }
+            }
+            composable(
+                route = "chat/{chatId}",
+                arguments = listOf(navArgument("chatId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val chatId = backStackEntry.arguments?.getString("chatId") ?: return@composable
+                ChatScreen(chatId = chatId, viewModel = chatViewModel)
             }
         }
     }
 }
+
+
 
 @Composable
 fun ChatsScreen(viewModel: ChatViewModel = viewModel(), onChatClick: (String) -> Unit = {}) {

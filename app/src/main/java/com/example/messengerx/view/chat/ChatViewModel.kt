@@ -2,6 +2,7 @@ package com.example.messengerx.view.chat
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.messengerx.api.ApiService
 import com.example.messengerx.api.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,55 +11,72 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.awaitResponse
 
-class ChatViewModel : ViewModel() {
+class ChatViewModel(private val apiService: ApiService) : ViewModel() {
     private val _chatList = MutableStateFlow<List<ChatItem>>(emptyList())
     val chatList: StateFlow<List<ChatItem>> = _chatList
+
+    private val _messages = MutableStateFlow<List<MessageResponse>>(emptyList())
+    val messages: StateFlow<List<MessageResponse>> = _messages
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    init {
-        loadChats()
-    }
-
-    private fun loadChats() {
+    fun loadChats() {
         viewModelScope.launch {
             try {
-                val response = withContext(Dispatchers.IO) {
-                    RetrofitClient.getInstance(context).getChats().awaitResponse()
-                }
-
+                val response = apiService.getChats().execute()
                 if (response.isSuccessful) {
-                    response.body()?.let { chatMap ->
-                        val chatItems = chatMap.mapNotNull { (id, data) ->
-                            val participants = data.participants ?: emptyList()
-                            val lastMessage = data.lastMessage ?: "No message"
-                            val timestamp = data.timestamp ?: 0L
-
-                            ChatItem(
-                                id = id,
-                                name = participants.joinToString(", "),
-                                isOnline = data.isOnline,
-                                lastSeen = data.lastSeen ?: "Unknown",
-                                lastMessage = lastMessage
-                            )
-                        }
-                        _chatList.value = chatItems
-                        _errorMessage.value = null
-                    } ?: run {
-                        _errorMessage.value = "Не удалось получить данные чатов"
-                    }
+                    val chatItems = response.body()?.map { (id, chatResponse) ->
+                        ChatItem(
+                            id = id,
+                            name = chatResponse.participants?.joinToString(", ") ?: "Unknown",
+                            isOnline = chatResponse.isOnline,
+                            lastSeen = chatResponse.lastSeen ?: "Unknown",
+                            lastMessage = chatResponse.lastMessage ?: "No message"
+                        )
+                    } ?: emptyList()
+                    _chatList.value = chatItems
                 } else {
-                    _errorMessage.value = "Ошибка загрузки данных: ${response.message()}"
+                    _errorMessage.value = "Ошибка загрузки чатов: ${response.message()}"
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Не удалось загрузить чаты: ${e.localizedMessage}"
+                _errorMessage.value = "Ошибка: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    fun loadMessages(chatId: String) {
+        viewModelScope.launch {
+            try {
+                val response = apiService.getMessages(chatId).execute()
+                if (response.isSuccessful) {
+                    val messages = response.body()?.values?.sortedBy { it.timestamp } ?: emptyList()
+                    _messages.value = messages
+                } else {
+                    _errorMessage.value = "Ошибка загрузки сообщений: ${response.message()}"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Ошибка: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    fun sendMessage(chatId: String, senderId: String, message: String) {
+        viewModelScope.launch {
+            try {
+                val messageRequest = MessageRequest(senderId, message, System.currentTimeMillis())
+                val response = apiService.sendMessage(chatId, messageRequest).execute()
+                if (response.isSuccessful) {
+                    loadMessages(chatId) // Обновляем сообщения
+                } else {
+                    _errorMessage.value = "Ошибка отправки сообщения: ${response.message()}"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Ошибка: ${e.localizedMessage}"
             }
         }
     }
 }
-
-
 
 data class ChatRequest(
     val participants: List<String>,

@@ -46,5 +46,10 @@ interface ApiService {
     @GET("chats/{chatId}/messages.json")
     fun getMessages(@Path("chatId") chatId: String): Call<Map<String, MessageResponse>>
 
+    @Headers("Accept: application/json")
+    @POST("chats/{chatId}/messages.json")
+    fun sendMessage(@Path("chatId") chatId: String, @Body message: MessageRequest): Call<Void>
+
+
 }
 
