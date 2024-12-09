@@ -32,7 +32,7 @@ class LoginActivity : ComponentActivity() {
     private lateinit var tokenDataStoreManager: TokenDataStoreManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState()
+        super.onCreate(savedInstanceState)
 
                 auth = FirebaseAuth.getInstance()
                 tokenDataStoreManager = TokenDataStoreManager(this)

@@ -15,9 +15,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
+import com.example.messengerx.api.TokenDataStoreManager
 import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.MainActivity
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
 
 val registrationGradient = Brush.verticalGradient(
     colors = listOf(Color(0xFF2BE4DC), Color(0xFF243484))
@@ -25,23 +28,17 @@ val registrationGradient = Brush.verticalGradient(
 
 class RegistrationActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
+    private lateinit var tokenDataStoreManager: TokenDataStoreManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        auth = FirebaseAuth.getInstance()
+                auth = FirebaseAuth.getInstance()
+                tokenDataStoreManager = TokenDataStoreManager(this)
 
-        setContent {
+                setContent {
             ThemeMessengerX {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(registrationGradient)
-                ) {
-                    RegistrationScreen(onRegisterSuccess = { email, password ->
-                        registerUser(email, password)
-                    })
-                }
+                RegistrationScreen { email, password -> registerUser(email, password) }
             }
         }
     }
@@ -50,6 +47,10 @@ class RegistrationActivity : ComponentActivity() {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+                    val token = auth.currentUser?.uid ?: ""
+                    lifecycleScope.launch {
+                        tokenDataStoreManager.saveToken(token) // Сохраняем токен
+                    }
                     navigateToMain()
                 } else {
                     println("Ошибка регистрации: ${task.exception?.message}")
@@ -63,7 +64,6 @@ class RegistrationActivity : ComponentActivity() {
         startActivity(intent)
     }
 }
-
 
 @Composable
 fun RegistrationScreen(onRegisterSuccess: (String, String) -> Unit) {
