@@ -21,6 +21,21 @@ class StoryViewModel : ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
+    fun addStory(userId: String, story: Story) {
+        viewModelScope.launch {
+            val db = FirebaseFirestore.getInstance()
+            db.collection("stories").document(userId).collection("userStories")
+                .add(story)
+                .addOnSuccessListener {
+                    fetchStories(userId) // Обновить список историй после добавления
+                }
+                .addOnFailureListener { exception ->
+                    _errorMessage.value = "Ошибка добавления истории: ${exception.localizedMessage}"
+                }
+        }
+    }
+
+
     fun fetchStories(userId: String) {
         viewModelScope.launch {
             val db = FirebaseFirestore.getInstance()

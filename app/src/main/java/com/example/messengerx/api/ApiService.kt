@@ -6,6 +6,7 @@ import com.example.messengerx.view.chat.MessageRequest
 import com.example.messengerx.view.chat.MessageResponse
 import com.example.messengerx.view.contact.ContactRequest
 import com.example.messengerx.view.contact.ContactResponse
+import com.example.messengerx.view.stories.Story
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -52,6 +53,13 @@ interface ApiService {
     @POST("chats/{chatId}/messages.json")
     fun sendMessage(@Path("chatId") chatId: String, @Body message: MessageRequest): Call<Void>
 
+    @Headers("Accept: application/json")
+    @GET("stories/{userId}/userStories.json")
+    fun getUserStories(@Path("userId") userId: String): Call<Map<String, Story>>
+
+    @Headers("Accept: application/json")
+    @POST("stories/{userId}/userStories.json")
+    fun addStory(@Path("userId") userId: String, @Body story: Story): Call<Void>
 
 }
 

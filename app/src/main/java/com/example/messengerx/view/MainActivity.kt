@@ -31,6 +31,7 @@ import com.example.messengerx.view.stories.StoryViewModel
 import com.example.messengerx.view.chat.ChatItemCard
 import com.example.messengerx.view.chat.ChatScreen
 import com.example.messengerx.view.chat.ChatViewModel
+import com.example.messengerx.view.stories.Story
 
 class MainActivity : ComponentActivity() {
     private lateinit var apiService: ApiService
@@ -58,7 +59,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(apiService: ApiService) {
     val navController = rememberNavController()
-    val storyViewModel: StoryViewModel = remember { StoryViewModel() } // Экземпляр ViewModel
+    val storyViewModel: StoryViewModel = remember { StoryViewModel() }
 
     Scaffold(
         bottomBar = {
@@ -84,8 +85,17 @@ fun MainScreen(apiService: ApiService) {
                 Column {
                     StoriesBar(
                         viewModel = storyViewModel,
-                        userId = "user1", // Текущий пользователь
-                        onAddStoryClick = { /* Реализуйте добавление истории */ }
+                        userId = "user1",
+                        onAddStoryClick = {
+                            storyViewModel.addStory(
+                                "user1",
+                                Story(
+                                    imageUrl = "https://example.com/path/to/image.jpg",
+                                    timestamp = System.currentTimeMillis(),
+                                    caption = "Новая история"
+                                )
+                            )
+                        }
                     )
                     ChatsScreen(apiService = apiService) { chatId ->
                         navController.navigate("chat/$chatId")
@@ -93,7 +103,7 @@ fun MainScreen(apiService: ApiService) {
                 }
             }
             composable("contacts") {
-                ContactsActivityContent()
+                Text("Контакты еще не реализованы")
             }
             composable(
                 route = "chat/{chatId}",
@@ -108,18 +118,35 @@ fun MainScreen(apiService: ApiService) {
 
 
 
+
 @Composable
-fun ChatsScreen(viewModel: ChatViewModel, onChatClick: (String) -> Unit) {
+fun ChatsScreen(
+    viewModel: ChatViewModel,
+    storyViewModel: StoryViewModel,
+    userId: String,
+    onChatClick: (String) -> Unit
+) {
     val chatList by viewModel.chatList.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
     Scaffold { padding ->
         Column(modifier = Modifier.padding(padding)) {
             // Добавляем StoriesBar
-            StoriesBar(onAddStoryClick = { capturedUri ->
-                // Обработайте загруженное изображение
-                println("Story added with URI: $capturedUri")
-            })
+            StoriesBar(
+                viewModel = storyViewModel,
+                userId = userId,
+                onAddStoryClick = {
+                    // Добавление истории
+                    storyViewModel.addStory(
+                        userId = userId,
+                        story = Story(
+                            imageUrl = "https://example.com/path/to/image.jpg",
+                            timestamp = System.currentTimeMillis(),
+                            caption = "Новая история"
+                        )
+                    )
+                }
+            )
 
             if (!errorMessage.isNullOrEmpty()) {
                 Text(
@@ -128,6 +155,7 @@ fun ChatsScreen(viewModel: ChatViewModel, onChatClick: (String) -> Unit) {
                     modifier = Modifier.padding(16.dp)
                 )
             }
+
             LazyColumn {
                 items(chatList, key = { it.id }) { chat ->
                     ChatItemCard(chat = chat) {
@@ -138,6 +166,7 @@ fun ChatsScreen(viewModel: ChatViewModel, onChatClick: (String) -> Unit) {
         }
     }
 }
+
 
 
 
