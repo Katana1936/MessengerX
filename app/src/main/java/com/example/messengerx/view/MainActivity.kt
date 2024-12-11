@@ -3,16 +3,26 @@ package com.example.messengerx.view
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -24,7 +34,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.messengerx.BottomNavigationBar
-import com.example.messengerx.PermissionsHandler
 import com.example.messengerx.api.ApiService
 import com.example.messengerx.api.RetrofitClient
 import com.example.messengerx.ui.theme.ThemeMessengerX
@@ -64,6 +73,14 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(apiService: ApiService) {
     val navController = rememberNavController()
     val storyViewModel = StoryViewModel(apiService)
+    val arePermissionsGranted = remember { mutableStateOf(false) } // Обновление на MutableState
+
+    val requestPermissionsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        arePermissionsGranted.value = permissions.values.all { it }
+    }
+
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
@@ -77,19 +94,35 @@ fun MainScreen(apiService: ApiService) {
             )
         }
     ) { innerPadding ->
-        PermissionsHandler(
-            permissions = listOf(
-                android.Manifest.permission.CAMERA,
-                android.Manifest.permission.READ_MEDIA_IMAGES,
-                android.Manifest.permission.READ_EXTERNAL_STORAGE
-            )
-        ) {
+        if (arePermissionsGranted.value) {
             NavigationHost(
                 navController = navController,
                 apiService = apiService,
                 storyViewModel = storyViewModel,
                 modifier = Modifier.padding(innerPadding)
             )
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text("Требуются разрешения для использования камеры и галереи")
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = {
+                    requestPermissionsLauncher.launch(
+                        arrayOf(
+                            android.Manifest.permission.CAMERA,
+                            android.Manifest.permission.READ_MEDIA_IMAGES,
+                            android.Manifest.permission.READ_EXTERNAL_STORAGE
+                        )
+                    )
+                }) {
+                    Text("Запросить разрешения")
+                }
+            }
         }
     }
 }
@@ -208,10 +241,15 @@ fun ChatsScreen(
             StoriesBar(
                 viewModel = storyViewModel,
                 userId = userId,
-                onAddStoryClick = {
-                    navController.navigate("add_story") // Переход на экран добавления истории
+                onAddStoryClick = { requestPermissions, arePermissionsGranted ->
+                    if (arePermissionsGranted) {
+                        navController.navigate("add_story")
+                    } else {
+                        requestPermissions()
+                    }
                 }
             )
+
 
             if (!errorMessage.isNullOrEmpty()) {
                 Text(

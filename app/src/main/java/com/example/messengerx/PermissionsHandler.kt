@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 @Composable
 fun PermissionsHandler(
     permissions: List<String>,
+    onPermissionsGranted: () -> Unit,
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
@@ -33,25 +34,34 @@ fun PermissionsHandler(
         results.forEach { (permission, isGranted) ->
             permissionStatus[permission]?.value = isGranted
         }
-    }
-
-    LaunchedEffect(Unit) {
-        val permissionsToRequest = permissions.filter {
-            ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
-        }
-        if (permissionsToRequest.isNotEmpty()) {
-            launcher.launch(permissionsToRequest.toTypedArray())
+        if (results.values.all { it }) {
+            onPermissionsGranted()
         }
     }
 
     if (allPermissionsGranted) {
         content()
     } else {
-        PermissionDeniedDialog(onRequestPermission = {
-            launcher.launch(permissions.toTypedArray())
-        })
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text(text = "Необходимы разрешения") },
+            text = { Text("Для использования камеры и галереи приложению нужны соответствующие разрешения.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    launcher.launch(permissions.toTypedArray())
+                }) {
+                    Text("Разрешить")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { /* Можно закрыть диалог или выполнить другое действие */ }) {
+                    Text("Закрыть")
+                }
+            }
+        )
     }
 }
+
 
 @Composable
 fun PermissionDeniedDialog(onRequestPermission: () -> Unit) {

@@ -28,10 +28,13 @@ import coil.compose.rememberAsyncImagePainter
 import java.io.File
 
 @Composable
-fun CreateStories(onPhotoSelected: (Uri) -> Unit) {
+fun CreateStories(
+    onPhotoSelected: (Uri) -> Unit,
+    requestPermissions: () -> Unit,
+    arePermissionsGranted: Boolean
+) {
     val context = LocalContext.current
 
-    // Используем `remember` для хранения состояния URI
     val photoUriState = remember { mutableStateOf<Uri?>(null) }
     val isPhotoTakenState = remember { mutableStateOf(false) }
 
@@ -54,7 +57,22 @@ fun CreateStories(onPhotoSelected: (Uri) -> Unit) {
         }
     }
 
-    if (!isPhotoTakenState.value) {
+    if (!arePermissionsGranted) {
+        // Показываем диалог запроса разрешений
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Gray),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("Разрешения не предоставлены")
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = { requestPermissions() }) {
+                Text("Запросить разрешения")
+            }
+        }
+    } else if (!isPhotoTakenState.value) {
         // Экран выбора способа добавления фото
         Column(
             modifier = Modifier
@@ -121,6 +139,7 @@ fun CreateStories(onPhotoSelected: (Uri) -> Unit) {
         }
     }
 }
+
 
 
 

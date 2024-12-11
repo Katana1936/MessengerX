@@ -1,5 +1,7 @@
 package com.example.messengerx.view.stories
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -29,10 +31,21 @@ import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StoriesBar(viewModel: StoryViewModel, userId: String, onAddStoryClick: () -> Unit) {
+fun StoriesBar(
+    viewModel: StoryViewModel,
+    userId: String,
+    onAddStoryClick: (requestPermissions: () -> Unit, arePermissionsGranted: Boolean) -> Unit
+) {
     val stories by viewModel.stories.collectAsState()
-    val state = rememberCarouselState { stories.size + 1 } // +1 для кнопки добавления
+    val state = rememberCarouselState { stories.size + 1 }
     var selectedStoryUrl by remember { mutableStateOf<String?>(null) }
+    val arePermissionsGranted = remember { mutableStateOf(false) }
+
+    val requestPermissionsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        arePermissionsGranted.value = permissions.values.all { it }
+    }
 
     Box(
         modifier = Modifier
@@ -55,7 +68,19 @@ fun StoriesBar(viewModel: StoryViewModel, userId: String, onAddStoryClick: () ->
                         .height(100.dp)
                         .clip(MaterialTheme.shapes.medium)
                         .background(Color.Gray)
-                        .clickable { onAddStoryClick() },
+                        .clickable {
+                            onAddStoryClick(
+                                {
+                                    requestPermissionsLauncher.launch(
+                                        arrayOf(
+                                            android.Manifest.permission.CAMERA,
+                                            android.Manifest.permission.READ_EXTERNAL_STORAGE
+                                        )
+                                    )
+                                },
+                                arePermissionsGranted.value
+                            )
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -66,7 +91,7 @@ fun StoriesBar(viewModel: StoryViewModel, userId: String, onAddStoryClick: () ->
                 }
             } else {
                 // Отображение историй
-                val story = stories[index - 1] // Смещение из-за кнопки добавления
+                val story = stories[index - 1]
                 Box(
                     modifier = Modifier
                         .width(75.dp)
@@ -87,7 +112,6 @@ fun StoriesBar(viewModel: StoryViewModel, userId: String, onAddStoryClick: () ->
         }
     }
 
-    // Диалог для отображения полной истории
     selectedStoryUrl?.let { imageUrl ->
         FullScreenImageDialog(
             imageUrl = imageUrl,
