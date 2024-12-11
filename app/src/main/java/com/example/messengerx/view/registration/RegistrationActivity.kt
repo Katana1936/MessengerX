@@ -72,49 +72,55 @@ fun RegistrationScreen(onRegisterSuccess: (String, String) -> Unit) {
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .background(registrationGradient)
+            .padding(16.dp)
     ) {
-        Text("Реєстрація", style = MaterialTheme.typography.headlineMedium, color = Color.White)
-        Spacer(modifier = Modifier.height(20.dp))
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Пароль") },
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation()
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-        if (errorMessage.isNotEmpty()) {
-            Text(errorMessage, color = Color.Red)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Text("Регистрация", style = MaterialTheme.typography.headlineMedium, color = Color.White)
+            Spacer(modifier = Modifier.height(20.dp))
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Электронная почта") },
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(modifier = Modifier.height(10.dp))
-        }
-        if (isLoading) {
-            CircularProgressIndicator()
-        } else {
-            Button(onClick = {
-                if (email.isNotBlank() && password.isNotBlank()) {
-                    isLoading = true
-                    errorMessage = ""
-                    onRegisterSuccess(email, password)
-                } else {
-                    errorMessage = "Заполните все поля"
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Пароль") },
+                modifier = Modifier.fillMaxWidth(),
+                visualTransformation = PasswordVisualTransformation()
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            if (errorMessage.isNotEmpty()) {
+                Text(errorMessage, color = Color.Red)
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+            if (isLoading) {
+                CircularProgressIndicator()
+            } else {
+                Button(onClick = {
+                    if (email.isNotBlank() && password.isNotBlank()) {
+                        isLoading = true
+                        errorMessage = ""
+                        onRegisterSuccess(email, password)
+                    } else {
+                        errorMessage = "Заполните все поля"
+                    }
+                }) {
+                    Text("Зарегистрироваться")
                 }
-            }) {
-                Text("Зареєструватись")
             }
         }
     }
 }
+
 

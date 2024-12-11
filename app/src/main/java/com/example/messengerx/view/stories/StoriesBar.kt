@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,12 +41,22 @@ fun StoriesBar(
     val stories by viewModel.stories.collectAsState()
     val state = rememberCarouselState { stories.size + 1 }
     var selectedStoryUrl by remember { mutableStateOf<String?>(null) }
+
+    // Проверяем, предоставлены ли разрешения
     val arePermissionsGranted = remember { mutableStateOf(false) }
 
     val requestPermissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         arePermissionsGranted.value = permissions.values.all { it }
+    }
+
+    LaunchedEffect(Unit) {
+        val permissions = arrayOf(
+            android.Manifest.permission.CAMERA,
+            android.Manifest.permission.READ_EXTERNAL_STORAGE
+        )
+        requestPermissionsLauncher.launch(permissions)
     }
 
     Box(
@@ -119,7 +130,6 @@ fun StoriesBar(
         )
     }
 }
-
 
 @Composable
 fun FullScreenImageDialog(imageUrl: String, onDismiss: () -> Unit) {
