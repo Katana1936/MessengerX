@@ -1,6 +1,7 @@
 package com.example.messengerx
 
-import android.content.Intent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -8,18 +9,13 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.messengerx.view.contact.ContactsActivity
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -37,56 +33,54 @@ fun BottomNavigationBar(
     tintColors: List<Color> = listOf(Color.White.copy(alpha = 0.1f)),
     noiseFactor: Float = 0.0f
 ) {
-    val context = LocalContext.current // Получаем context здесь
-
     var selectedItem by remember { mutableStateOf(0) }
 
     val items = listOf("Чаты", "Контакты", "Аккаунт", "Настройки")
-    val selectedIcons = listOf(
-        painterResource(id = R.drawable.ic_chat),
-        painterResource(id = R.drawable.ic_contact),
-        painterResource(id = R.drawable.ic_account),
-        painterResource(id = R.drawable.ic_settings)
-    )
-    val unselectedIcons = listOf(
-        painterResource(id = R.drawable.ic_chat),
-        painterResource(id = R.drawable.ic_contact),
-        painterResource(id = R.drawable.ic_account),
-        painterResource(id = R.drawable.ic_settings)
+    val routes = listOf("chats", "contacts", "account", "settings")
+    val icons = listOf(
+        R.drawable.ic_chat,
+        R.drawable.ic_contact,
+        R.drawable.ic_account,
+        R.drawable.ic_settings
     )
 
     NavigationBar(
         modifier = modifier
             .hazeChild(state = hazeState, style = CustomHazeStyle())
             .fillMaxWidth(),
-        containerColor = Color.Transparent
+        containerColor = backgroundColor
     ) {
         items.forEachIndexed { index, item ->
+            val isSelected = selectedItem == index
+
+            // Анимация цвета и масштаба для иконок
+            val iconColor by animateColorAsState(
+                targetValue = if (isSelected) Color.White else Color.Gray
+            )
+            val scale by animateFloatAsState(
+                targetValue = if (isSelected) 1.2f else 1.0f
+            )
+
             NavigationBarItem(
                 icon = {
                     Icon(
-                        painter = if (selectedItem == index) selectedIcons[index] else unselectedIcons[index],
+                        painter = painterResource(id = icons[index]),
                         contentDescription = item,
-                        tint = if (selectedItem == index) Color.White else Color.Gray
+                        tint = iconColor,
+                        modifier = Modifier.scale(scale)
                     )
                 },
                 label = {
                     Text(
                         text = item,
-                        color = if (selectedItem == index) Color.White else Color.Gray,
+                        color = if (isSelected) Color.White else Color.Gray,
                         style = MaterialTheme.typography.labelSmall
                     )
                 },
-                selected = selectedItem == index,
+                selected = isSelected,
                 onClick = {
                     selectedItem = index
-                    onItemSelected(item)
-
-                    if (item == "Контакты") {
-                        // Используем context для запуска ContactsActivity
-                        val intent = Intent(context, ContactsActivity::class.java)
-                        context.startActivity(intent)
-                    }
+                    onItemSelected(routes[index])
                 },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = Color.White,
@@ -98,7 +92,6 @@ fun BottomNavigationBar(
         }
     }
 }
-
 
 @Composable
 fun CustomHazeStyle(
@@ -117,5 +110,3 @@ fun CustomHazeStyle(
         )
     }
 }
-
-

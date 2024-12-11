@@ -13,10 +13,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -26,12 +26,13 @@ import com.example.messengerx.BottomNavigationBar
 import com.example.messengerx.api.ApiService
 import com.example.messengerx.api.RetrofitClient
 import com.example.messengerx.ui.theme.ThemeMessengerX
-import com.example.messengerx.view.stories.StoriesBar
-import com.example.messengerx.view.stories.StoryViewModel
 import com.example.messengerx.view.chat.ChatItemCard
 import com.example.messengerx.view.chat.ChatScreen
 import com.example.messengerx.view.chat.ChatViewModel
+import com.example.messengerx.view.contact.ContactsViewModel
+import com.example.messengerx.view.stories.StoriesBar
 import com.example.messengerx.view.stories.Story
+import com.example.messengerx.view.stories.StoryViewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var apiService: ApiService
@@ -59,71 +60,116 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(apiService: ApiService) {
     val navController = rememberNavController()
-    val storyViewModel: StoryViewModel = remember { StoryViewModel() }
+    val storyViewModel = StoryViewModel(apiService)
+    val hazeState = dev.chrisbanes.haze.HazeState()
 
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
-                hazeState = dev.chrisbanes.haze.HazeState(),
+                hazeState = hazeState,
                 onItemSelected = { route ->
-                    when (route) {
-                        "Чаты" -> navController.navigate("chats")
-                        "Контакты" -> navController.navigate("contacts")
-                        "Аккаунт" -> navController.navigate("account")
-                        "Настройки" -> navController.navigate("settings")
+                    navController.navigate(route) {
+                        launchSingleTop = true
+                        restoreState = true
                     }
                 }
             )
         }
     ) { innerPadding ->
-        NavHost(
+        NavigationHost(
             navController = navController,
-            startDestination = "chats",
+            apiService = apiService,
+            storyViewModel = storyViewModel,
             modifier = Modifier.padding(innerPadding)
-        ) {
-            composable("chats") {
-                Column {
-                    StoriesBar(
-                        viewModel = storyViewModel,
-                        userId = "user1",
-                        onAddStoryClick = {
-                            storyViewModel.addStory(
-                                "user1",
-                                Story(
-                                    imageUrl = "https://example.com/path/to/image.jpg",
-                                    timestamp = System.currentTimeMillis(),
-                                    caption = "Новая история"
-                                )
-                            )
-                        }
-                    )
-                    ChatsScreen(
-                        viewModel = ChatViewModel(apiService),
-                        storyViewModel = storyViewModel,
-                        userId = "user1",
-                        onChatClick = { chatId ->
-                            navController.navigate("chat/$chatId")
-                        }
-                    )
+        )
+    }
+}
 
+@Composable
+fun NavigationHost(
+    navController: NavHostController,
+    apiService: ApiService,
+    storyViewModel: StoryViewModel,
+    modifier: Modifier = Modifier
+) {
+    NavHost(
+        navController = navController,
+        startDestination = "chats",
+        modifier = modifier
+    ) {
+        composable("chats") {
+            ChatsScreen(
+                viewModel = ChatViewModel(apiService),
+                storyViewModel = storyViewModel,
+                userId = "user1",
+                onChatClick = { chatId -> navController.navigate("chat/$chatId") }
+            )
+        }
+        composable("contacts") {
+            val contactsViewModel = ContactsViewModel(apiService)
+            ContactsContent(
+                viewModel = contactsViewModel,
+                onContactClick = { contactId ->
+                    println("Выбран контакт: $contactId")
                 }
-            }
-            composable("contacts") {
-                Text("Контакты еще не реализованы")
-            }
-            composable(
-                route = "chat/{chatId}",
-                arguments = listOf(navArgument("chatId") { type = NavType.StringType })
-            ) { backStackEntry ->
-                val chatId = backStackEntry.arguments?.getString("chatId") ?: return@composable
-                ChatScreen(chatId = chatId, apiService = apiService)
+            )
+        }
+        composable("account") {
+            PlaceholderScreen("Функционал аккаунта временно недоступен")
+        }
+        composable("settings") {
+            PlaceholderScreen("Настройки временно недоступны")
+        }
+        composable(
+            route = "chat/{chatId}",
+            arguments = listOf(navArgument("chatId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val chatId = backStackEntry.arguments?.getString("chatId") ?: return@composable
+            ChatScreen(chatId = chatId, apiService = apiService)
+        }
+    }
+}
+
+
+@Composable
+fun ContactsContent(viewModel: ContactsViewModel, onContactClick: (String) -> Unit) {
+    val contactList by viewModel.filteredContacts.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
+
+    Scaffold(
+        topBar = {
+            Text("Контакты")
+        }
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding)) {
+            LazyColumn {
+                items(contactList, key = { it.id }) { contact ->
+                    Text(
+                        text = contact.name,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
             }
         }
     }
 }
 
 
-
+@Composable
+fun PlaceholderScreen(message: String) {
+    Scaffold {
+        Column(
+            modifier = Modifier.padding(it)
+        ) {
+            Text(
+                text = message,
+                color = Color.Gray,
+                style = androidx.compose.material3.MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+    }
+}
 
 @Composable
 fun ChatsScreen(
@@ -170,10 +216,3 @@ fun ChatsScreen(
         }
     }
 }
-
-
-
-
-
-
-
