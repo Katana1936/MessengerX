@@ -97,9 +97,15 @@ fun MainScreen(apiService: ApiService) {
                             )
                         }
                     )
-                    ChatsScreen(apiService = apiService) { chatId ->
-                        navController.navigate("chat/$chatId")
-                    }
+                    ChatsScreen(
+                        viewModel = ChatViewModel(apiService),
+                        storyViewModel = storyViewModel,
+                        userId = "user1",
+                        onChatClick = { chatId ->
+                            navController.navigate("chat/$chatId")
+                        }
+                    )
+
                 }
             }
             composable("contacts") {
@@ -131,12 +137,10 @@ fun ChatsScreen(
 
     Scaffold { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            // Добавляем StoriesBar
             StoriesBar(
                 viewModel = storyViewModel,
                 userId = userId,
                 onAddStoryClick = {
-                    // Добавление истории
                     storyViewModel.addStory(
                         userId = userId,
                         story = Story(
@@ -166,6 +170,7 @@ fun ChatsScreen(
         }
     }
 }
+
 
 
 
