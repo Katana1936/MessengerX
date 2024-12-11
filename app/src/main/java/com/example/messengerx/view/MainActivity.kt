@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -23,6 +24,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.messengerx.BottomNavigationBar
+import com.example.messengerx.PermissionsHandler
 import com.example.messengerx.api.ApiService
 import com.example.messengerx.api.RetrofitClient
 import com.example.messengerx.ui.theme.ThemeMessengerX
@@ -30,9 +32,10 @@ import com.example.messengerx.view.chat.ChatItemCard
 import com.example.messengerx.view.chat.ChatScreen
 import com.example.messengerx.view.chat.ChatViewModel
 import com.example.messengerx.view.contact.ContactsViewModel
+import com.example.messengerx.view.stories.AddStoryScreen
 import com.example.messengerx.view.stories.StoriesBar
-import com.example.messengerx.view.stories.Story
 import com.example.messengerx.view.stories.StoryViewModel
+
 
 class MainActivity : ComponentActivity() {
     private lateinit var apiService: ApiService
@@ -61,12 +64,10 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(apiService: ApiService) {
     val navController = rememberNavController()
     val storyViewModel = StoryViewModel(apiService)
-    val hazeState = dev.chrisbanes.haze.HazeState()
-
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
-                hazeState = hazeState,
+                hazeState = dev.chrisbanes.haze.HazeState(),
                 onItemSelected = { route ->
                     navController.navigate(route) {
                         launchSingleTop = true
@@ -76,14 +77,23 @@ fun MainScreen(apiService: ApiService) {
             )
         }
     ) { innerPadding ->
-        NavigationHost(
-            navController = navController,
-            apiService = apiService,
-            storyViewModel = storyViewModel,
-            modifier = Modifier.padding(innerPadding)
-        )
+        PermissionsHandler(
+            permissions = listOf(
+                android.Manifest.permission.CAMERA,
+                android.Manifest.permission.READ_MEDIA_IMAGES,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE
+            )
+        ) {
+            NavigationHost(
+                navController = navController,
+                apiService = apiService,
+                storyViewModel = storyViewModel,
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
     }
 }
+
 
 @Composable
 fun NavigationHost(
@@ -102,7 +112,8 @@ fun NavigationHost(
                 viewModel = ChatViewModel(apiService),
                 storyViewModel = storyViewModel,
                 userId = "user1",
-                onChatClick = { chatId -> navController.navigate("chat/$chatId") }
+                onChatClick = { chatId -> navController.navigate("chat/$chatId") },
+                navController = navController // Передаем контроллер навигации
             )
         }
         composable("contacts") {
@@ -127,8 +138,17 @@ fun NavigationHost(
             val chatId = backStackEntry.arguments?.getString("chatId") ?: return@composable
             ChatScreen(chatId = chatId, apiService = apiService)
         }
+        // Новый маршрут для добавления истории
+        composable("add_story") {
+            AddStoryScreen(
+                viewModel = storyViewModel,
+                userId = "user1",
+                onBack = { navController.popBackStack() } // Возврат на предыдущий экран
+            )
+        }
     }
 }
+
 
 
 @Composable
@@ -176,6 +196,7 @@ fun ChatsScreen(
     viewModel: ChatViewModel,
     storyViewModel: StoryViewModel,
     userId: String,
+    navController: NavController, // Добавляем NavController для навигации
     onChatClick: (String) -> Unit
 ) {
     val chatList by viewModel.chatList.collectAsState()
@@ -183,18 +204,12 @@ fun ChatsScreen(
 
     Scaffold { padding ->
         Column(modifier = Modifier.padding(padding)) {
+            // Обновленный StoriesBar с переходом
             StoriesBar(
                 viewModel = storyViewModel,
                 userId = userId,
                 onAddStoryClick = {
-                    storyViewModel.addStory(
-                        userId = userId,
-                        story = Story(
-                            imageUrl = "https://example.com/path/to/image.jpg",
-                            timestamp = System.currentTimeMillis(),
-                            caption = "Новая история"
-                        )
-                    )
+                    navController.navigate("add_story") // Переход на экран добавления истории
                 }
             )
 
@@ -216,3 +231,4 @@ fun ChatsScreen(
         }
     }
 }
+

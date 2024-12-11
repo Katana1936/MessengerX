@@ -22,13 +22,15 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
+    private val db = FirebaseFirestore.getInstance()
+
     fun addStory(userId: String, story: Story) {
         viewModelScope.launch {
-            val db = FirebaseFirestore.getInstance()
             db.collection("stories").document(userId).collection("userStories")
                 .add(story)
                 .addOnSuccessListener {
-                    fetchStories(userId) // Обновить список историй после добавления
+                    // После добавления, обновляем список историй
+                    fetchStories(userId)
                 }
                 .addOnFailureListener { exception ->
                     _errorMessage.value = "Ошибка добавления истории: ${exception.localizedMessage}"
@@ -38,23 +40,22 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
 
     fun fetchStories(userId: String) {
         viewModelScope.launch {
-            try {
-                val response = apiService.getUserStories(userId).execute()
-                if (response.isSuccessful) {
-                    val stories = response.body()?.values?.toList() ?: emptyList()
-                    _stories.value = stories
-                } else {
-                    _errorMessage.value = "Ошибка: ${response.message()}"
+            db.collection("stories").document(userId).collection("userStories")
+                .get()
+                .addOnSuccessListener { querySnapshot ->
+                    val storiesList = querySnapshot.documents.mapNotNull { document ->
+                        document.toObject(Story::class.java)
+                    }
+                    _stories.value = storiesList
                 }
-            } catch (e: Exception) {
-                _errorMessage.value = "Ошибка загрузки: ${e.localizedMessage}"
-            }
+                .addOnFailureListener { exception ->
+                    _errorMessage.value = "Ошибка загрузки историй: ${exception.localizedMessage}"
+                }
         }
     }
 
     fun deleteStory(userId: String, story: Story) {
         viewModelScope.launch {
-            val db = FirebaseFirestore.getInstance()
             db.collection("stories").document(userId).collection("userStories")
                 .whereEqualTo("timestamp", story.timestamp)
                 .get()
@@ -62,11 +63,12 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
                     for (document in querySnapshot.documents) {
                         document.reference.delete()
                     }
+                    // Обновляем список после удаления
+                    fetchStories(userId)
                 }
                 .addOnFailureListener { exception ->
                     _errorMessage.value = "Ошибка удаления истории: ${exception.localizedMessage}"
                 }
         }
     }
-
 }
