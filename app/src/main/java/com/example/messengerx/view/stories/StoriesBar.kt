@@ -6,95 +6,86 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
+import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.messengerx.R
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StoriesBar(viewModel: StoryViewModel, userId: String, onAddStoryClick: () -> Unit) {
     val stories by viewModel.stories.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
-    val context = LocalContext.current
+    val state = rememberCarouselState { stories.size }
     var selectedStoryUrl by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
-    // Загружаем истории при открытии
+    // Загрузка историй при открытии
     LaunchedEffect(userId) {
         viewModel.fetchStories(userId)
     }
 
-    // Удаление устаревших историй
-    LaunchedEffect(stories) {
-        val currentTime = System.currentTimeMillis()
-        val expiredStories = stories.filter { currentTime - it.timestamp > 24 * 60 * 60 * 1000 }
-        expiredStories.forEach { story ->
-            viewModel.deleteStory(userId, story) // Удаление из Firestore
-        }
-    }
-
-    if (!errorMessage.isNullOrEmpty()) {
-        Text(
-            text = errorMessage!!,
-            color = MaterialTheme.colorScheme.error,
-            modifier = Modifier.padding(8.dp)
-        )
-    }
-
-    LazyRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-    ) {
-        // Добавить историю
-        item {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.Gray)
-                        .clickable { onAddStoryClick() }
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_add),
-                        contentDescription = "Добавить историю",
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(24.dp),
-                        tint = Color.White
-                    )
-                }
-                Text(text = "Моя история", style = MaterialTheme.typography.bodySmall)
+    Column {
+        // Карусель с историями
+        HorizontalMultiBrowseCarousel(
+            state = state,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .padding(8.dp),
+            preferredItemWidth = 150.dp,
+            itemSpacing = 8.dp
+        ) { index ->
+            val story = stories[index]
+            Box(
+                modifier = Modifier
+                    .width(150.dp)
+                    .height(160.dp)
+                    .clip(MaterialTheme.shapes.medium)
+                    .clickable {
+                        coroutineScope.launch {
+                            selectedStoryUrl = story.imageUrl
+                        }
+                    }
+            ) {
+                AsyncImage(
+                    model = story.imageUrl,
+                    contentDescription = story.caption,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
 
-        // Существующие истории
-        items(stories) { story ->
-            StoryPreview(
-                name = story.caption,
-                imageUrl = story.imageUrl,
-                onClick = { selectedStoryUrl = story.imageUrl }
-            )
+        // Кнопка добавления истории
+        Box(
+            modifier = Modifier
+                .padding(8.dp)
+                .clip(MaterialTheme.shapes.small)
+                .background(MaterialTheme.colorScheme.primary)
+                .clickable { onAddStoryClick() }
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = "Добавить историю", color = MaterialTheme.colorScheme.onPrimary)
         }
     }
 
@@ -108,36 +99,18 @@ fun StoriesBar(viewModel: StoryViewModel, userId: String, onAddStoryClick: () ->
 }
 
 @Composable
-fun StoryPreview(name: String, imageUrl: String, onClick: () -> Unit) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(
-            modifier = Modifier
-                .size(70.dp)
-                .clip(CircleShape)
-                .clickable { onClick() }
-        ) {
-            AsyncImage(
-                model = imageUrl,
-                contentDescription = "Превью истории",
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-        Text(text = name, style = MaterialTheme.typography.bodySmall, maxLines = 1)
-    }
-}
-
-@Composable
 fun FullScreenImageDialog(imageUrl: String, onDismiss: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.8f))
+            .background(MaterialTheme.colorScheme.background)
             .clickable { onDismiss() },
         contentAlignment = Alignment.Center
     ) {
         AsyncImage(
             model = imageUrl,
-            contentDescription = "Полный экран",
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
             modifier = Modifier.fillMaxSize()
         )
     }
