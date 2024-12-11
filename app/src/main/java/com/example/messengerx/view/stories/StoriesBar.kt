@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,7 +35,7 @@ import coil.compose.AsyncImage
 fun StoriesBar(
     viewModel: StoryViewModel,
     userId: String,
-    onAddStoryClick: (requestPermissions: () -> Unit, arePermissionsGranted: Boolean) -> Unit
+    navController: NavController
 ) {
     val stories by viewModel.stories.collectAsState()
     val state = rememberCarouselState { stories.size + 1 }
@@ -69,17 +70,16 @@ fun StoriesBar(
                         .clip(MaterialTheme.shapes.medium)
                         .background(Color.Gray)
                         .clickable {
-                            onAddStoryClick(
-                                {
-                                    requestPermissionsLauncher.launch(
-                                        arrayOf(
-                                            android.Manifest.permission.CAMERA,
-                                            android.Manifest.permission.READ_EXTERNAL_STORAGE
-                                        )
+                            if (arePermissionsGranted.value) {
+                                navController.navigate("add_story")
+                            } else {
+                                requestPermissionsLauncher.launch(
+                                    arrayOf(
+                                        android.Manifest.permission.CAMERA,
+                                        android.Manifest.permission.READ_EXTERNAL_STORAGE
                                     )
-                                },
-                                arePermissionsGranted.value
-                            )
+                                )
+                            }
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -119,7 +119,6 @@ fun StoriesBar(
         )
     }
 }
-
 
 
 @Composable
