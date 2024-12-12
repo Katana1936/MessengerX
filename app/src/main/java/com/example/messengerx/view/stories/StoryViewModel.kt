@@ -21,21 +21,37 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
 
     private val db = FirebaseFirestore.getInstance()
 
-    fun addStory(userId: String, story: Story) {
-        viewModelScope.launch {
+    fun isFirstStory(userId: String, callback: (Boolean) -> Unit) {
+        db.collection("stories").document(userId).collection("userStories")
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val isFirst = querySnapshot.documents.isEmpty()
+                callback(isFirst)
+            }
+            .addOnFailureListener { exception ->
+                println("Error checking first story: ${exception.localizedMessage}")
+            }
+    }
+
+    fun addStory(userId: String, story: Story, onResult: (Boolean) -> Unit) {
+        isFirstStory(userId) { isFirst ->
             db.collection("stories").document(userId).collection("userStories")
                 .add(story)
                 .addOnSuccessListener {
-                    // После добавления, обновляем список историй
+                    if (isFirst) {
+                        onResult(true)
+                    } else {
+                        onResult(false)
+                    }
                     fetchStories(userId)
                 }
                 .addOnFailureListener { exception ->
-                    println("Ошибка добавления истории: ${exception.localizedMessage}")
+                    println("Error adding story: ${exception.localizedMessage}")
                 }
         }
     }
 
-    private fun fetchStories(userId: String) {
+    fun fetchStories(userId: String) {
         viewModelScope.launch {
             db.collection("stories").document(userId).collection("userStories")
                 .get()
@@ -46,9 +62,8 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
                     _stories.value = storiesList
                 }
                 .addOnFailureListener { exception ->
-                    println("Ошибка загрузки историй: ${exception.localizedMessage}")
+                    println("Error fetching stories: ${exception.localizedMessage}")
                 }
         }
     }
 }
-

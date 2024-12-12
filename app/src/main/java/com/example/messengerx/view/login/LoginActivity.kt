@@ -21,11 +21,11 @@ import com.example.messengerx.view.MainActivity
 import com.example.messengerx.view.registration.RegistrationActivity
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 
 val loginGradient = Brush.verticalGradient(
     colors = listOf(Color(0xFF2BE4DC), Color(0xFF243484))
 )
-
 
 class LoginActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
@@ -34,10 +34,19 @@ class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-                auth = FirebaseAuth.getInstance()
-                tokenDataStoreManager = TokenDataStoreManager(this)
+        auth = FirebaseAuth.getInstance() // Инициализация FirebaseAuth
+        tokenDataStoreManager = TokenDataStoreManager(this)
 
-                setContent {
+        // Проверка, есть ли сохранённый токен
+        lifecycleScope.launch {
+            val token = tokenDataStoreManager.token.first()
+            if (!token.isNullOrEmpty()) {
+                navigateToMain()
+            }
+        }
+
+        // Отображение экрана входа
+        setContent {
             ThemeMessengerX {
                 LoginScreen(
                     onLogin = { email, password -> loginUser(email, password) },
@@ -54,8 +63,8 @@ class LoginActivity : ComponentActivity() {
                     val token = auth.currentUser?.uid ?: ""
                     lifecycleScope.launch {
                         tokenDataStoreManager.saveToken(token) // Сохраняем токен
+                        navigateToMain()
                     }
-                    navigateToMain()
                 } else {
                     println("Ошибка входа: ${task.exception?.message}")
                 }
@@ -72,7 +81,6 @@ class LoginActivity : ComponentActivity() {
         startActivity(Intent(this, RegistrationActivity::class.java))
     }
 }
-
 
 @Composable
 fun LoginScreen(onLogin: (String, String) -> Unit, onRegisterClick: () -> Unit) {

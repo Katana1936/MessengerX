@@ -52,6 +52,9 @@
             android:exported="true"
             android:theme="@style/Theme.MessengerX" />
 
+        <activity android:name=".view.stories.AddStoryActivity" />
+
+
     </application>
 
 </manifest>

@@ -1,5 +1,6 @@
 package com.example.messengerx.view.stories
 
+import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -35,6 +36,7 @@ import coil.compose.AsyncImage
 @Composable
 fun StoriesBar(
     viewModel: StoryViewModel,
+    userId: String,
     navController: NavController
 ) {
     val stories by viewModel.stories.collectAsState()
@@ -72,7 +74,6 @@ fun StoriesBar(
             itemSpacing = 4.dp
         ) { index ->
             if (index == 0) {
-                // Кнопка добавления истории
                 Box(
                     modifier = Modifier
                         .width(75.dp)
@@ -81,7 +82,8 @@ fun StoriesBar(
                         .background(Color.Gray)
                         .clickable {
                             if (arePermissionsGranted.value) {
-                                navController.navigate("add_story")
+                                val intent = Intent(navController.context, AddStoryActivity::class.java)
+                                navController.context.startActivity(intent)
                             } else {
                                 requestPermissionsLauncher.launch(
                                     arrayOf(

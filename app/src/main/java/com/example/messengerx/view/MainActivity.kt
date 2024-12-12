@@ -1,7 +1,7 @@
 package com.example.messengerx.view
 
+import android.content.Intent
 import android.os.Bundle
-import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -26,38 +27,53 @@ import androidx.navigation.navArgument
 import com.example.messengerx.BottomNavigationBar
 import com.example.messengerx.api.ApiService
 import com.example.messengerx.api.RetrofitClient
+import com.example.messengerx.api.TokenDataStoreManager
 import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.chat.ChatItemCard
 import com.example.messengerx.view.chat.ChatScreen
 import com.example.messengerx.view.chat.ChatViewModel
 import com.example.messengerx.view.contact.ContactsViewModel
+import com.example.messengerx.view.login.LoginActivity
 import com.example.messengerx.view.stories.AddStoryScreen
 import com.example.messengerx.view.stories.StoriesBar
 import com.example.messengerx.view.stories.StoryViewModel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
-    private lateinit var apiService: ApiService
+    private lateinit var tokenDataStoreManager: TokenDataStoreManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        apiService = RetrofitClient.getInstance()
+        tokenDataStoreManager = TokenDataStoreManager(this)
 
-        window.setBackgroundDrawableResource(android.R.color.transparent)
-        window.decorView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-        )
+        lifecycleScope.launch {
+            val token = tokenDataStoreManager.token.first()
+            if (token.isNullOrEmpty()) {
+                navigateToLogin()
+            } else {
+                setupMainScreen()
+            }
+        }
+    }
 
+    private fun navigateToLogin() {
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+    }
+
+    private fun setupMainScreen() {
         setContent {
             ThemeMessengerX(isTransparent = true) {
-                MainScreen(apiService)
+                MainScreen(apiService = RetrofitClient.getInstance())
             }
         }
     }
 }
+
 
 @Composable
 fun MainScreen(apiService: ApiService) {
@@ -189,7 +205,7 @@ fun ChatsScreen(
     viewModel: ChatViewModel,
     storyViewModel: StoryViewModel,
     userId: String,
-    navController: NavController, // Передаём navController
+    navController: NavController,
     onChatClick: (String) -> Unit
 ) {
     val chatList by viewModel.chatList.collectAsState()
@@ -197,7 +213,6 @@ fun ChatsScreen(
 
     Scaffold { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            // StoriesBar с navController
             StoriesBar(
                 viewModel = storyViewModel,
                 userId = userId,
@@ -222,5 +237,6 @@ fun ChatsScreen(
         }
     }
 }
+
 
 
