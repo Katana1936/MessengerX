@@ -1,24 +1,12 @@
 package com.example.messengerx.view.stories
 
+import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -38,18 +26,17 @@ fun AddStoryScreen(
     val context = LocalContext.current
     var arePermissionsGranted by remember { mutableStateOf(false) }
     var showBottomSheet by remember { mutableStateOf(false) }
+    var previewUri by remember { mutableStateOf<Uri?>(null) }
+    var isPreviewVisible by remember { mutableStateOf(false) }
 
-    val requestPermissionsLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        arePermissionsGranted = permissions.values.all { it }
-    }
+    val coroutineScope = rememberCoroutineScope()
 
     val takePictureLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            println("Фотография успешно сделана")
+            Log.d("AddStoryScreen", "Фото успешно сделано")
+            isPreviewVisible = true
         }
     }
 
@@ -57,77 +44,109 @@ fun AddStoryScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let {
-            viewModel.addStory(
-                userId = userId,
-                story = Story(
-                    imageUrl = uri.toString(),
-                    timestamp = System.currentTimeMillis(),
-                    caption = "Новая история"
-                )
-            )
-            onBack()
+            Log.d("AddStoryScreen", "Выбрано изображение: $uri")
+            previewUri = it
+            isPreviewVisible = true
         }
     }
 
-    // Проверка и запрос разрешений
-    if (!arePermissionsGranted) {
-        PermissionsHandler(
-            permissions = listOf(
-                android.Manifest.permission.CAMERA,
-                android.Manifest.permission.READ_EXTERNAL_STORAGE
-            ),
-            onPermissionsGranted = { arePermissionsGranted = true }
-        ) {
-            Text("Разрешения предоставлены. Теперь можно добавить историю.")
+    // Обработчик разрешений
+    PermissionsHandler(
+        permissions = buildList {
+            add(android.Manifest.permission.CAMERA)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                add(android.Manifest.permission.READ_MEDIA_IMAGES)
+            } else {
+                add(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+        },
+        onPermissionsGranted = {
+            arePermissionsGranted = true
         }
-    } else {
-        // Логика отображения BottomSheet
-        if (showBottomSheet) {
-            val sheetState = rememberModalBottomSheetState()
-            val coroutineScope = rememberCoroutineScope()
+    ) {
+        Text("Нет разрешений для добавления истории")
+    }
 
-            ModalBottomSheet(
-                onDismissRequest = { showBottomSheet = false },
-                sheetState = sheetState
+    if (arePermissionsGranted) {
+        Button(onClick = {
+            showBottomSheet = true
+        }) {
+            Text("Добавить историю")
+        }
+    }
+
+    if (showBottomSheet) {
+        val bottomSheetState = rememberModalBottomSheetState()
+        ModalBottomSheet(
+            onDismissRequest = { showBottomSheet = false },
+            sheetState = bottomSheetState
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("Выберите действие", style = MaterialTheme.typography.headlineSmall)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = {
-                        val file = File(context.getExternalFilesDir(null), "story_image.jpg")
-                        val photoUri = FileProvider.getUriForFile(
-                            context,
-                            "${context.packageName}.provider",
-                            file
-                        )
-                        takePictureLauncher.launch(photoUri)
-                        coroutineScope.launch { sheetState.hide() }
-                        showBottomSheet = false
-                    }) {
-                        Text("Снять с камеры")
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(onClick = {
-                        selectFromGalleryLauncher.launch("image/*")
-                        coroutineScope.launch { sheetState.hide() }
-                        showBottomSheet = false
-                    }) {
-                        Text("Выбрать из галереи")
-                    }
+                Button(onClick = {
+                    val file = File(context.getExternalFilesDir(null), "story_image.jpg")
+                    val photoUri = FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.provider",
+                        file
+                    )
+                    previewUri = photoUri
+                    takePictureLauncher.launch(photoUri)
+                    coroutineScope.launch { bottomSheetState.hide() }
+                    showBottomSheet = false
+                }) {
+                    Text("Сделать фото")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(onClick = {
+                    selectFromGalleryLauncher.launch("image/*")
+                    coroutineScope.launch { bottomSheetState.hide() }
+                    showBottomSheet = false
+                }) {
+                    Text("Выбрать из галереи")
                 }
             }
-        } else {
-            // Кнопка открытия BottomSheet
-            Button(onClick = { showBottomSheet = true }) {
-                Text("Добавить историю")
-            }
         }
     }
+
+    if (isPreviewVisible) {
+        AlertDialog(
+            onDismissRequest = { isPreviewVisible = false },
+            title = { Text("Предварительный просмотр") },
+            text = {
+                previewUri?.let {
+                    Text("Вы хотите опубликовать историю или сделать новое фото?")
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    previewUri?.let {
+                        viewModel.addStory(
+                            userId = userId,
+                            story = Story(
+                                imageUrl = it.toString(),
+                                timestamp = System.currentTimeMillis(),
+                                caption = "Новая история"
+                            )
+                        )
+                        onBack()
+                    }
+                }) {
+                    Text("Опубликовать")
+                }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    isPreviewVisible = false
+                    showBottomSheet = true
+                }) {
+                    Text("Переделать")
+                }
+            }
+        )
+    }
 }
-
-
