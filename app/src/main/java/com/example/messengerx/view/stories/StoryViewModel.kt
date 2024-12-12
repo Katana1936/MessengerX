@@ -25,31 +25,27 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
         db.collection("stories").document(userId).collection("userStories")
             .get()
             .addOnSuccessListener { querySnapshot ->
-                val isFirst = querySnapshot.documents.isEmpty()
+                val isFirst = querySnapshot.isEmpty
                 callback(isFirst)
             }
             .addOnFailureListener { exception ->
-                println("Error checking first story: ${exception.localizedMessage}")
+                println("Ошибка проверки первой истории: ${exception.localizedMessage}")
             }
     }
 
-    fun addStory(userId: String, story: Story, onResult: (Boolean) -> Unit) {
-        isFirstStory(userId) { isFirst ->
-            db.collection("stories").document(userId).collection("userStories")
-                .add(story)
-                .addOnSuccessListener {
-                    if (isFirst) {
-                        onResult(true)
-                    } else {
-                        onResult(false)
-                    }
-                    fetchStories(userId)
-                }
-                .addOnFailureListener { exception ->
-                    println("Error adding story: ${exception.localizedMessage}")
-                }
-        }
+    fun addStory(userId: String, story: Story, onComplete: (() -> Unit) = {}) {
+        db.collection("stories").document(userId).collection("userStories")
+            .add(story)
+            .addOnSuccessListener {
+                fetchStories(userId)
+                onComplete() // Вызываем, если передано
+            }
+            .addOnFailureListener { exception ->
+                println("Ошибка добавления истории: ${exception.localizedMessage}")
+            }
     }
+
+
 
     fun fetchStories(userId: String) {
         viewModelScope.launch {

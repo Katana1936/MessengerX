@@ -11,8 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import com.example.messengerx.PermissionsHandler
-import kotlinx.coroutines.launch
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -23,20 +21,15 @@ fun AddStoryScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    var arePermissionsGranted by remember { mutableStateOf(false) }
     var showBottomSheet by remember { mutableStateOf(false) }
     var previewUri by remember { mutableStateOf<Uri?>(null) }
-    var isPreviewVisible by remember { mutableStateOf(false) }
+    var isUploading by remember { mutableStateOf(false) }
     var showFirstStoryMessage by remember { mutableStateOf(false) }
-
-    val coroutineScope = rememberCoroutineScope()
 
     val takePictureLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
-        if (success) {
-            isPreviewVisible = true
-        }
+        if (success) showBottomSheet = false
     }
 
     val selectFromGalleryLauncher = rememberLauncherForActivityResult(
@@ -44,45 +37,18 @@ fun AddStoryScreen(
     ) { uri ->
         uri?.let {
             previewUri = it
-            isPreviewVisible = true
+            showBottomSheet = false
         }
     }
 
-    PermissionsHandler(
-        permissions = buildList {
-            add(android.Manifest.permission.CAMERA)
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                add(android.Manifest.permission.READ_MEDIA_IMAGES)
-                add(android.Manifest.permission.READ_MEDIA_VIDEO)
-            } else {
-                add(android.Manifest.permission.READ_EXTERNAL_STORAGE)
-            }
-        },
-        onPermissionsGranted = {
-            arePermissionsGranted = true
-        }
-    ) {
-        Text("No permissions to add story")
-    }
-
-    if (arePermissionsGranted) {
-        Button(onClick = {
-            showBottomSheet = true
-        }) {
-            Text("Add Story")
-        }
+    Button(onClick = { showBottomSheet = true }) {
+        Text("Добавить историю")
     }
 
     if (showBottomSheet) {
-        val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        ModalBottomSheet(
-            onDismissRequest = { showBottomSheet = false },
-            sheetState = bottomSheetState
-        ) {
+        ModalBottomSheet(onDismissRequest = { showBottomSheet = false }) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Button(onClick = {
@@ -90,76 +56,59 @@ fun AddStoryScreen(
                     val photoUri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
                     previewUri = photoUri
                     takePictureLauncher.launch(photoUri)
-                    coroutineScope.launch { bottomSheetState.hide() }
-                    showBottomSheet = false
                 }) {
-                    Text("Take Photo")
+                    Text("Сделать фото")
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Button(onClick = {
-                    selectFromGalleryLauncher.launch("image/*")
-                    coroutineScope.launch { bottomSheetState.hide() }
-                    showBottomSheet = false
-                }) {
-                    Text("Select from Gallery")
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = { selectFromGalleryLauncher.launch("image/*") }) {
+                    Text("Выбрать из галереи")
                 }
             }
         }
     }
 
-    if (isPreviewVisible) {
-        AlertDialog(
-            onDismissRequest = { isPreviewVisible = false },
-            title = { Text("Preview") },
-            text = {
-                previewUri?.let {
-                    Text("Do you want to publish the story or take a new photo?")
-                }
-            },
-            confirmButton = {
+    previewUri?.let { uri ->
+        if (isUploading) {
+            CircularProgressIndicator()
+        } else {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(text = "Предпросмотр")
+                Spacer(modifier = Modifier.height(16.dp))
                 Button(onClick = {
-                    previewUri?.let {
-                        viewModel.addStory(
-                            userId = userId,
-                            story = Story(
-                                imageUrl = it.toString(),
-                                timestamp = System.currentTimeMillis(),
-                                caption = "New Story"
-                            )
-                        ) { isFirst ->
-                            if (isFirst as Boolean) {
-                                showFirstStoryMessage = true
-                            }
-                            onBack()
-                        }
+                    isUploading = true
+                    viewModel.addStory(
+                        userId = userId,
+                        story = Story(imageUrl = uri.toString(), timestamp = System.currentTimeMillis())
+                    ) {
+                        isUploading = false
+                        showFirstStoryMessage = true
+                        onBack()
                     }
                 }) {
-                    Text("Publish")
-                }
-            },
-            dismissButton = {
-                Button(onClick = {
-                    isPreviewVisible = false
-                    showBottomSheet = true
-                }) {
-                    Text("Retake")
+                    Text(text = "Опубликовать")
                 }
             }
-        )
+        }
     }
 
     if (showFirstStoryMessage) {
         AlertDialog(
-            onDismissRequest = { showFirstStoryMessage = false },
-            title = { Text("Congratulations!") },
-            text = { Text("Hurray, your first story!") },
+            onDismissRequest = {
+                showFirstStoryMessage = false
+                onBack()
+            },
+            title = { Text("Поздравляем!") },
+            text = { Text("Ура, ваша первая история!") },
             confirmButton = {
-                Button(onClick = { showFirstStoryMessage = false }) {
-                    Text("Close")
+                Button(onClick = {
+                    showFirstStoryMessage = false
+                    onBack()
+                }) {
+                    Text("Закрыть")
                 }
             }
         )
     }
 }
+
+

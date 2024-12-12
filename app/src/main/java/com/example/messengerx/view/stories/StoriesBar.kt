@@ -1,6 +1,5 @@
 package com.example.messengerx.view.stories
 
-import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -43,9 +42,7 @@ fun StoriesBar(
     val state = rememberCarouselState { stories.size + 1 }
     var selectedStoryUrl by remember { mutableStateOf<String?>(null) }
 
-    // Проверяем, предоставлены ли разрешения
     val arePermissionsGranted = remember { mutableStateOf(false) }
-
     val requestPermissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -82,8 +79,7 @@ fun StoriesBar(
                         .background(Color.Gray)
                         .clickable {
                             if (arePermissionsGranted.value) {
-                                val intent = Intent(navController.context, AddStoryActivity::class.java)
-                                navController.context.startActivity(intent)
+                                navController.navigate("add_story")
                             } else {
                                 requestPermissionsLauncher.launch(
                                     arrayOf(
@@ -102,7 +98,6 @@ fun StoriesBar(
                     )
                 }
             } else {
-                // Отображение историй
                 val story = stories[index - 1]
                 Box(
                     modifier = Modifier
@@ -131,6 +126,8 @@ fun StoriesBar(
         )
     }
 }
+
+
 @Composable
 fun FullScreenImageDialog(imageUrl: String, onDismiss: () -> Unit) {
     Box(
