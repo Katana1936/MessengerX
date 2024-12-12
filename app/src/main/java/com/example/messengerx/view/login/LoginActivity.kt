@@ -81,7 +81,6 @@ class LoginActivity : ComponentActivity() {
         startActivity(Intent(this, RegistrationActivity::class.java))
     }
 }
-
 @Composable
 fun LoginScreen(onLogin: (String, String) -> Unit, onRegisterClick: () -> Unit) {
     var email by remember { mutableStateOf("") }
