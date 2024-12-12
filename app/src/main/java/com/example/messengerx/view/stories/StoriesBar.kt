@@ -126,8 +126,6 @@ fun StoriesBar(
         )
     }
 }
-
-
 @Composable
 fun FullScreenImageDialog(imageUrl: String, onDismiss: () -> Unit) {
     Box(
