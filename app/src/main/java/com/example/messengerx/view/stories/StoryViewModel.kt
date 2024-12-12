@@ -19,9 +19,6 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
     private val _stories = MutableStateFlow<List<Story>>(emptyList())
     val stories: StateFlow<List<Story>> = _stories
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage
-
     private val db = FirebaseFirestore.getInstance()
 
     fun addStory(userId: String, story: Story) {
@@ -33,12 +30,12 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
                     fetchStories(userId)
                 }
                 .addOnFailureListener { exception ->
-                    _errorMessage.value = "Ошибка добавления истории: ${exception.localizedMessage}"
+                    println("Ошибка добавления истории: ${exception.localizedMessage}")
                 }
         }
     }
 
-    fun fetchStories(userId: String) {
+    private fun fetchStories(userId: String) {
         viewModelScope.launch {
             db.collection("stories").document(userId).collection("userStories")
                 .get()
@@ -49,26 +46,9 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
                     _stories.value = storiesList
                 }
                 .addOnFailureListener { exception ->
-                    _errorMessage.value = "Ошибка загрузки историй: ${exception.localizedMessage}"
-                }
-        }
-    }
-
-    fun deleteStory(userId: String, story: Story) {
-        viewModelScope.launch {
-            db.collection("stories").document(userId).collection("userStories")
-                .whereEqualTo("timestamp", story.timestamp)
-                .get()
-                .addOnSuccessListener { querySnapshot ->
-                    for (document in querySnapshot.documents) {
-                        document.reference.delete()
-                    }
-                    // Обновляем список после удаления
-                    fetchStories(userId)
-                }
-                .addOnFailureListener { exception ->
-                    _errorMessage.value = "Ошибка удаления истории: ${exception.localizedMessage}"
+                    println("Ошибка загрузки историй: ${exception.localizedMessage}")
                 }
         }
     }
 }
+

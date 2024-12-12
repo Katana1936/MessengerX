@@ -35,7 +35,6 @@ import coil.compose.AsyncImage
 @Composable
 fun StoriesBar(
     viewModel: StoryViewModel,
-    userId: String,
     navController: NavController
 ) {
     val stories by viewModel.stories.collectAsState()
@@ -130,7 +129,6 @@ fun StoriesBar(
         )
     }
 }
-
 @Composable
 fun FullScreenImageDialog(imageUrl: String, onDismiss: () -> Unit) {
     Box(

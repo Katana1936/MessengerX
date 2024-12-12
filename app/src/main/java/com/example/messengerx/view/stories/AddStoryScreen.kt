@@ -50,12 +50,12 @@ fun AddStoryScreen(
         }
     }
 
-    // Обработчик разрешений
     PermissionsHandler(
         permissions = buildList {
             add(android.Manifest.permission.CAMERA)
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                 add(android.Manifest.permission.READ_MEDIA_IMAGES)
+                add(android.Manifest.permission.READ_MEDIA_VIDEO)
             } else {
                 add(android.Manifest.permission.READ_EXTERNAL_STORAGE)
             }
@@ -67,6 +67,7 @@ fun AddStoryScreen(
         Text("Нет разрешений для добавления истории")
     }
 
+
     if (arePermissionsGranted) {
         Button(onClick = {
             showBottomSheet = true
@@ -75,8 +76,19 @@ fun AddStoryScreen(
         }
     }
 
+    if (arePermissionsGranted) {
+        Button(onClick = {
+            showBottomSheet = true
+            Log.d("AddStoryScreen", "Кнопка нажата, showBottomSheet = $showBottomSheet")
+        }) {
+            Text("Добавить историю")
+        }
+    } else {
+        Text("Нет разрешений для добавления истории")
+    }
+
     if (showBottomSheet) {
-        val bottomSheetState = rememberModalBottomSheetState()
+        val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         ModalBottomSheet(
             onDismissRequest = { showBottomSheet = false },
             sheetState = bottomSheetState
@@ -87,24 +99,19 @@ fun AddStoryScreen(
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Text("Выберите действие", style = MaterialTheme.typography.titleLarge)
+                Spacer(modifier = Modifier.height(16.dp))
                 Button(onClick = {
-                    val file = File(context.getExternalFilesDir(null), "story_image.jpg")
-                    val photoUri = FileProvider.getUriForFile(
-                        context,
-                        "${context.packageName}.provider",
-                        file
-                    )
-                    previewUri = photoUri
-                    takePictureLauncher.launch(photoUri)
-                    coroutineScope.launch { bottomSheetState.hide() }
+                    // Логика для съёмки фото
+                    Log.d("AddStoryScreen", "Съёмка фото выбрана")
                     showBottomSheet = false
                 }) {
                     Text("Сделать фото")
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(onClick = {
-                    selectFromGalleryLauncher.launch("image/*")
-                    coroutineScope.launch { bottomSheetState.hide() }
+                    // Логика для выбора из галереи
+                    Log.d("AddStoryScreen", "Выбор из галереи выбран")
                     showBottomSheet = false
                 }) {
                     Text("Выбрать из галереи")
@@ -112,6 +119,7 @@ fun AddStoryScreen(
             }
         }
     }
+
 
     if (isPreviewVisible) {
         AlertDialog(
