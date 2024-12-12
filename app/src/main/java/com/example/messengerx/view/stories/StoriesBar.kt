@@ -30,7 +30,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StoriesBar(
