@@ -1,5 +1,9 @@
 package com.example.messengerx.view.stories
 
+import android.net.Uri
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.messengerx.api.ApiService
@@ -15,37 +19,25 @@ data class Story(
 )
 
 class StoryViewModel(private val apiService: ApiService) : ViewModel() {
+    var currentPhotoUri: Uri? by mutableStateOf(null) // Состояние для управления URI
+    var showBottomSheet by mutableStateOf(false)
 
     private val _stories = MutableStateFlow<List<Story>>(emptyList())
     val stories: StateFlow<List<Story>> = _stories
 
     private val db = FirebaseFirestore.getInstance()
 
-    fun isFirstStory(userId: String, callback: (Boolean) -> Unit) {
-        db.collection("stories").document(userId).collection("userStories")
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                val isFirst = querySnapshot.isEmpty
-                callback(isFirst)
-            }
-            .addOnFailureListener { exception ->
-                println("Ошибка проверки первой истории: ${exception.localizedMessage}")
-            }
-    }
-
     fun addStory(userId: String, story: Story, onComplete: (() -> Unit) = {}) {
         db.collection("stories").document(userId).collection("userStories")
             .add(story)
             .addOnSuccessListener {
                 fetchStories(userId)
-                onComplete() // Вызываем, если передано
+                onComplete()
             }
             .addOnFailureListener { exception ->
                 println("Ошибка добавления истории: ${exception.localizedMessage}")
             }
     }
-
-
 
     fun fetchStories(userId: String) {
         viewModelScope.launch {
