@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -78,7 +79,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(apiService: ApiService) {
     val navController = rememberNavController()
-    val storyViewModel = StoryViewModel(apiService)
+    val storyViewModel = remember { StoryViewModel(apiService) }
 
     Scaffold(
         bottomBar = {
@@ -104,6 +105,7 @@ fun MainScreen(apiService: ApiService) {
 
 
 
+
 @Composable
 fun NavigationHost(
     navController: NavHostController,
@@ -122,7 +124,7 @@ fun NavigationHost(
                 storyViewModel = storyViewModel,
                 userId = "user1",
                 onChatClick = { chatId -> navController.navigate("chat/$chatId") },
-                navController = navController // Передаем контроллер навигации
+                navController = navController
             )
         }
         composable("contacts") {
@@ -147,7 +149,6 @@ fun NavigationHost(
             val chatId = backStackEntry.arguments?.getString("chatId") ?: return@composable
             ChatScreen(chatId = chatId, apiService = apiService)
         }
-        // Новый маршрут для добавления истории
         composable("add_story") {
             AddStoryScreen(
                 viewModel = storyViewModel,
@@ -157,6 +158,7 @@ fun NavigationHost(
         }
     }
 }
+
 
 
 

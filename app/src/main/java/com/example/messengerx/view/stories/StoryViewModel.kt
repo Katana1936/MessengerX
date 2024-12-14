@@ -7,7 +7,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.messengerx.api.ApiService
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -19,39 +18,50 @@ data class Story(
 )
 
 class StoryViewModel(private val apiService: ApiService) : ViewModel() {
-    var currentPhotoUri: Uri? by mutableStateOf(null) // Состояние для управления URI
-    var showBottomSheet by mutableStateOf(false)
+    // URI текущей фотографии
+    var currentPhotoUri: Uri? by mutableStateOf(null)
 
+    // Поток для хранения историй
     private val _stories = MutableStateFlow<List<Story>>(emptyList())
     val stories: StateFlow<List<Story>> = _stories
 
-    private val db = FirebaseFirestore.getInstance()
-
-    fun addStory(userId: String, story: Story, onComplete: (() -> Unit) = {}) {
-        db.collection("stories").document(userId).collection("userStories")
-            .add(story)
-            .addOnSuccessListener {
-                fetchStories(userId)
-                onComplete()
+    /**
+     * Добавление истории через API
+     */
+    fun addStory(userId: String, story: Story, onComplete: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                // Выполняем запрос на добавление истории через API
+                val response = apiService.addStory(userId, story).execute()
+                if (response.isSuccessful) {
+                    fetchStories(userId) // Обновляем список историй
+                    onComplete() // Вызываем коллбэк завершения
+                } else {
+                    println("Ошибка добавления истории: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                println("Ошибка подключения: ${e.localizedMessage}")
             }
-            .addOnFailureListener { exception ->
-                println("Ошибка добавления истории: ${exception.localizedMessage}")
-            }
+        }
     }
 
+    /**
+     * Получение историй через API
+     */
     fun fetchStories(userId: String) {
         viewModelScope.launch {
-            db.collection("stories").document(userId).collection("userStories")
-                .get()
-                .addOnSuccessListener { querySnapshot ->
-                    val storiesList = querySnapshot.documents.mapNotNull { document ->
-                        document.toObject(Story::class.java)
-                    }
+            try {
+                // Запрашиваем список историй через API
+                val response = apiService.getUserStories(userId).execute()
+                if (response.isSuccessful) {
+                    val storiesList = response.body()?.values?.toList() ?: emptyList()
                     _stories.value = storiesList
+                } else {
+                    println("Ошибка получения историй: ${response.errorBody()?.string()}")
                 }
-                .addOnFailureListener { exception ->
-                    println("Error fetching stories: ${exception.localizedMessage}")
-                }
+            } catch (e: Exception) {
+                println("Ошибка подключения: ${e.localizedMessage}")
+            }
         }
     }
 }

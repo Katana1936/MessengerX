@@ -1,7 +1,5 @@
 package com.example.messengerx.view.stories
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -31,8 +29,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StoriesBar(
@@ -40,24 +36,14 @@ fun StoriesBar(
     userId: String,
     navController: NavController
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.fetchStories(userId) // Загружаем истории
+    }
+
     val stories by viewModel.stories.collectAsState()
     val state = rememberCarouselState { stories.size + 1 }
+
     var selectedStoryUrl by remember { mutableStateOf<String?>(null) }
-
-    val arePermissionsGranted = remember { mutableStateOf(false) }
-    val requestPermissionsLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        arePermissionsGranted.value = permissions.values.all { it }
-    }
-
-    LaunchedEffect(Unit) {
-        val permissions = arrayOf(
-            android.Manifest.permission.CAMERA,
-            android.Manifest.permission.READ_EXTERNAL_STORAGE
-        )
-        requestPermissionsLauncher.launch(permissions)
-    }
 
     Box(
         modifier = Modifier
@@ -80,24 +66,11 @@ fun StoriesBar(
                         .clip(MaterialTheme.shapes.medium)
                         .background(Color.Gray)
                         .clickable {
-                            if (arePermissionsGranted.value) {
-                                navController.navigate("add_story")
-                            } else {
-                                requestPermissionsLauncher.launch(
-                                    arrayOf(
-                                        android.Manifest.permission.CAMERA,
-                                        android.Manifest.permission.READ_EXTERNAL_STORAGE
-                                    )
-                                )
-                            }
+                            navController.navigate("add_story")
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "+",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Color.White
-                    )
+                    Text("+", style = MaterialTheme.typography.headlineMedium, color = Color.White)
                 }
             } else {
                 val story = stories[index - 1]
@@ -107,7 +80,7 @@ fun StoriesBar(
                         .height(100.dp)
                         .clip(MaterialTheme.shapes.medium)
                         .clickable {
-                            selectedStoryUrl = story.imageUrl
+                            selectedStoryUrl = story.imageUrl // Открыть полноэкранное изображение
                         }
                 ) {
                     AsyncImage(
@@ -124,10 +97,14 @@ fun StoriesBar(
     selectedStoryUrl?.let { imageUrl ->
         FullScreenImageDialog(
             imageUrl = imageUrl,
-            onDismiss = { selectedStoryUrl = null }
+            onDismiss = { selectedStoryUrl = null } // Закрытие полноэкранного режима
         )
     }
 }
+
+
+
+
 @Composable
 fun FullScreenImageDialog(imageUrl: String, onDismiss: () -> Unit) {
     Box(
