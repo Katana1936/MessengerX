@@ -62,7 +62,7 @@ class LoginActivity : ComponentActivity() {
                 if (task.isSuccessful) {
                     val token = auth.currentUser?.uid ?: ""
                     lifecycleScope.launch {
-                        tokenDataStoreManager.saveToken(token) // Сохраняем токен
+                        tokenDataStoreManager.saveToken(token) 
                         navigateToMain()
                     }
                 } else {
