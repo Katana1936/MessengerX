@@ -1,8 +1,12 @@
 package com.example.messengerx.view.stories
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,31 +23,56 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
+import kotlinx.coroutines.launch
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StoriesBar(
     viewModel: StoryViewModel,
-    userId: String,
-    navController: NavController
+    userId: String
 ) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedStoryUrl by remember { mutableStateOf<String?>(null) } // Для полноэкранного режима
+
+    // Лаунчер для камеры
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && imageUri != null) {
+            // Успешно сделано фото, загружаем его
+            val story = Story(
+                imageUrl = imageUri.toString(),
+                timestamp = System.currentTimeMillis()
+            )
+            coroutineScope.launch {
+                viewModel.addStory(userId, story) {
+                    viewModel.fetchStories(userId) // Обновляем список историй после загрузки
+                }
+            }
+        }
+    }
+
     LaunchedEffect(Unit) {
-        viewModel.fetchStories(userId) // Загружаем истории
+        viewModel.fetchStories(userId) // Загружаем истории при создании компонента
     }
 
     val stories by viewModel.stories.collectAsState()
     val state = rememberCarouselState { stories.size + 1 }
-
-    var selectedStoryUrl by remember { mutableStateOf<String?>(null) }
 
     Box(
         modifier = Modifier
@@ -59,6 +88,7 @@ fun StoriesBar(
             itemSpacing = 4.dp
         ) { index ->
             if (index == 0) {
+                // Первая ячейка для открытия камеры
                 Box(
                     modifier = Modifier
                         .width(75.dp)
@@ -66,7 +96,15 @@ fun StoriesBar(
                         .clip(MaterialTheme.shapes.medium)
                         .background(Color.Gray)
                         .clickable {
-                            navController.navigate("add_story")
+                            // Создаем файл для нового фото
+                            val file = File(context.getExternalFilesDir(null), "story_image_${System.currentTimeMillis()}.jpg")
+                            val uri = FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.provider",
+                                file
+                            )
+                            imageUri = uri
+                            takePictureLauncher.launch(uri) // Открываем камеру
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -80,7 +118,7 @@ fun StoriesBar(
                         .height(100.dp)
                         .clip(MaterialTheme.shapes.medium)
                         .clickable {
-                            selectedStoryUrl = story.imageUrl // Открыть полноэкранное изображение
+                            selectedStoryUrl = story.imageUrl // Открываем полноэкранное изображение
                         }
                 ) {
                     AsyncImage(
@@ -94,6 +132,7 @@ fun StoriesBar(
         }
     }
 
+    // Показ полноэкранного изображения, если выбрано
     selectedStoryUrl?.let { imageUrl ->
         FullScreenImageDialog(
             imageUrl = imageUrl,
@@ -104,21 +143,22 @@ fun StoriesBar(
 
 
 
-
 @Composable
 fun FullScreenImageDialog(imageUrl: String, onDismiss: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.8f))
-            .clickable { onDismiss() },
+            .clickable { onDismiss() }, // Закрываем при нажатии
         contentAlignment = Alignment.Center
     ) {
         AsyncImage(
             model = imageUrl,
             contentDescription = null,
-            contentScale = ContentScale.Fit,
-            modifier = Modifier.fillMaxSize()
+            contentScale = ContentScale.Fit, // Подгоняем изображение по размеру экрана
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
         )
     }
 }

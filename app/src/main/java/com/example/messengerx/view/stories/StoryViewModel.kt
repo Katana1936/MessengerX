@@ -18,24 +18,16 @@ data class Story(
 )
 
 class StoryViewModel(private val apiService: ApiService) : ViewModel() {
-    // URI текущей фотографии
-    var currentPhotoUri: Uri? by mutableStateOf(null)
-
-    // Поток для хранения историй
     private val _stories = MutableStateFlow<List<Story>>(emptyList())
     val stories: StateFlow<List<Story>> = _stories
 
-    /**
-     * Добавление истории через API
-     */
     fun addStory(userId: String, story: Story, onComplete: () -> Unit) {
         viewModelScope.launch {
             try {
-                // Выполняем запрос на добавление истории через API
                 val response = apiService.addStory(userId, story).execute()
                 if (response.isSuccessful) {
-                    fetchStories(userId) // Обновляем список историй
-                    onComplete() // Вызываем коллбэк завершения
+                    onComplete()
+                    fetchStories(userId)
                 } else {
                     println("Ошибка добавления истории: ${response.errorBody()?.string()}")
                 }
@@ -45,13 +37,13 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
         }
     }
 
+
     /**
-     * Получение историй через API
+     * Загрузка списка историй
      */
     fun fetchStories(userId: String) {
         viewModelScope.launch {
             try {
-                // Запрашиваем список историй через API
                 val response = apiService.getUserStories(userId).execute()
                 if (response.isSuccessful) {
                     val storiesList = response.body()?.values?.toList() ?: emptyList()
@@ -65,3 +57,4 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
         }
     }
 }
+

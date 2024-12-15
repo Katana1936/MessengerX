@@ -3,6 +3,7 @@ package com.example.messengerx.view.stories
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -21,18 +22,19 @@ import java.io.File
 fun AddStoryScreen(
     viewModel: StoryViewModel,
     userId: String,
+    onStoryPublished: () -> Unit, // Callback для возврата на MainActivity после публикации
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
     var isUploading by remember { mutableStateOf(false) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
 
-    // Лаунчер для запуска камеры
+    // Лаунчер для камеры
     val takePictureLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (!success) {
-            imageUri = null // Сброс URI, если фото не удалось сделать
+            imageUri = null // Сбрасываем URI, если фото не удалось сделать
         }
     }
 
@@ -56,7 +58,7 @@ fun AddStoryScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 if (imageUri == null) {
                     // Кнопка для съемки фото
@@ -75,17 +77,21 @@ fun AddStoryScreen(
                 } else {
                     // Предпросмотр фото
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Предпросмотр")
+                        Text("Предпросмотр", style = MaterialTheme.typography.titleLarge)
                         Spacer(modifier = Modifier.height(16.dp))
+
                         AsyncImage(
                             model = imageUri,
                             contentDescription = "Превью истории",
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(16 / 9f)
+                                .fillMaxWidth(0.8f) // Ширина в 80% экрана
+                                .aspectRatio(16 / 9f) // Соотношение сторон 16:9
+                                .background(MaterialTheme.colorScheme.surface)
                         )
+
                         Spacer(modifier = Modifier.height(16.dp))
 
+                        // Кнопки переснять и выложить
                         Row(
                             horizontalArrangement = Arrangement.SpaceEvenly,
                             modifier = Modifier.fillMaxWidth()
@@ -114,7 +120,7 @@ fun AddStoryScreen(
                                     )
                                     viewModel.addStory(userId, story) {
                                         isUploading = false
-                                        onBack() 
+                                        onStoryPublished() // Возвращаемся на MainActivity
                                     }
                                 },
                                 enabled = !isUploading
@@ -126,7 +132,7 @@ fun AddStoryScreen(
                                         strokeWidth = 2.dp
                                     )
                                 } else {
-                                    Text("Опубликовать")
+                                    Text("Выложить")
                                 }
                             }
                         }
@@ -136,3 +142,4 @@ fun AddStoryScreen(
         }
     )
 }
+

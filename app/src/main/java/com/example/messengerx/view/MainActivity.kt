@@ -38,38 +38,34 @@ import com.example.messengerx.view.login.LoginActivity
 import com.example.messengerx.view.stories.AddStoryScreen
 import com.example.messengerx.view.stories.StoriesBar
 import com.example.messengerx.view.stories.StoryViewModel
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-
 class MainActivity : ComponentActivity() {
-    private lateinit var tokenDataStoreManager: TokenDataStoreManager
-
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        super.onCreate(savedInstanceState()
 
-        tokenDataStoreManager = TokenDataStoreManager(this)
+            // Проверка текущего пользователя через FirebaseAuth
+            val currentUser = FirebaseAuth.getInstance().currentUser
 
-        lifecycleScope.launch {
-            val token = tokenDataStoreManager.token.first()
-            if (token.isNullOrEmpty()) {
-                navigateToLogin()
-            } else {
-                setupMainScreen()
-            }
+        if (currentUser == null) {
+            navigateToWelcome()
+        } else {
+            setupMainScreen()
         }
     }
 
-    private fun navigateToLogin() {
-        val intent = Intent(this, LoginActivity::class.java)
+    private fun navigateToWelcome() {
+        val intent = Intent(this, WelcomeActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
     }
 
     private fun setupMainScreen() {
         setContent {
-            ThemeMessengerX(isTransparent = true) {
-                MainScreen(apiService = RetrofitClient.getInstance())
+            ThemeMessengerX {
+                MainScreen()
             }
         }
     }
@@ -153,7 +149,11 @@ fun NavigationHost(
             AddStoryScreen(
                 viewModel = storyViewModel,
                 userId = "user1",
-                onBack = { navController.popBackStack() } // Возврат на предыдущий экран
+                onStoryPublished = {
+                    navController.popBackStack() // Возвращаемся на предыдущий экран
+                    navController.navigate("chats") // Перезагружаем экран чатов с обновленными историями
+                },
+                onBack = { navController.popBackStack() }
             )
         }
     }
@@ -217,8 +217,7 @@ fun ChatsScreen(
         Column(modifier = Modifier.padding(padding)) {
             StoriesBar(
                 viewModel = storyViewModel,
-                userId = userId,
-                navController = navController
+                userId = userId
             )
 
             if (!errorMessage.isNullOrEmpty()) {
