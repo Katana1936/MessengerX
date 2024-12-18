@@ -39,38 +39,56 @@ import com.example.messengerx.view.stories.AddStoryScreen
 import com.example.messengerx.view.stories.StoriesBar
 import com.example.messengerx.view.stories.StoryViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+
 class MainActivity : ComponentActivity() {
+    private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
+    private val databaseReference by lazy { FirebaseDatabase.getInstance().getReference("users") }
+    private lateinit var tokenDataStoreManager: TokenDataStoreManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState()
+        super.onCreate(savedInstanceState)
+        tokenDataStoreManager = TokenDataStoreManager(this)
 
-            // Проверка текущего пользователя через FirebaseAuth
-            val currentUser = FirebaseAuth.getInstance().currentUser
-
-        if (currentUser == null) {
-            navigateToWelcome()
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            checkUserInDatabase(currentUser.uid,
+                onSuccess = { setupMainScreen() },
+                onFailure = { navigateToLogin() }
+            )
         } else {
-            setupMainScreen()
+            navigateToLogin()
         }
-    }
-
-    private fun navigateToWelcome() {
-        val intent = Intent(this, WelcomeActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
     }
 
     private fun setupMainScreen() {
         setContent {
+            val apiService = RetrofitClient.getInstance()
             ThemeMessengerX {
-                MainScreen()
+                MainScreen(apiService = apiService)
+            }
+        }
+    }
+
+    private fun navigateToLogin() {
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+    }
+
+    private fun checkUserInDatabase(userId: String, onSuccess: () -> Unit, onFailure: () -> Unit) {
+        databaseReference.child(userId).get().addOnCompleteListener { task ->
+            if (task.isSuccessful && task.result.exists()) {
+                onSuccess()
+            } else {
+                onFailure()
             }
         }
     }
 }
-
 
 @Composable
 fun MainScreen(apiService: ApiService) {

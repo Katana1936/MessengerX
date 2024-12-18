@@ -33,10 +33,10 @@ class RegistrationActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-                auth = FirebaseAuth.getInstance()
-                tokenDataStoreManager = TokenDataStoreManager(this)
+        auth = FirebaseAuth.getInstance()
+        tokenDataStoreManager = TokenDataStoreManager(this)
 
-                setContent {
+        setContent {
             ThemeMessengerX {
                 RegistrationScreen { email, password -> registerUser(email, password) }
             }
@@ -47,11 +47,18 @@ class RegistrationActivity : ComponentActivity() {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    val token = auth.currentUser?.uid ?: ""
-                    lifecycleScope.launch {
-                        tokenDataStoreManager.saveToken(token) // Сохраняем токен
+                    val user = auth.currentUser
+                    user?.sendEmailVerification()?.addOnCompleteListener { emailTask ->
+                        if (emailTask.isSuccessful) {
+                            println("Письмо для подтверждения отправлено")
+                        } else {
+                            println("Ошибка отправки письма: ${emailTask.exception?.message}")
+                        }
                     }
-                    navigateToMain()
+                    lifecycleScope.launch {
+                        tokenDataStoreManager.saveToken(user?.uid ?: "")
+                        navigateToMain()
+                    }
                 } else {
                     println("Ошибка регистрации: ${task.exception?.message}")
                 }

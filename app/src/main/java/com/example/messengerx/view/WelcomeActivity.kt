@@ -28,10 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.login.LoginActivity
 import com.example.messengerx.view.registration.RegistrationActivity
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 val largeRadialGradient = object : ShaderBrush() {
     override fun createShader(size: Size): Shader {
@@ -46,42 +43,55 @@ val largeRadialGradient = object : ShaderBrush() {
 }
 
 class WelcomeActivity : ComponentActivity() {
-    private lateinit var auth: FirebaseAuth
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        auth = FirebaseAuth.getInstance()
-
-        // Проверяем, вошел ли пользователь
-        GlobalScope.launch {
-            delay(1500) // Задержка для сплэш-экрана
-            if (auth.currentUser != null) {
-                navigateToMain()
-            }
-        }
+        enableEdgeToEdge() // Включение режима Edge-to-Edge
 
         setContent {
             ThemeMessengerX {
-                WelcomeScreen(
-                    onLoginClick = { navigateToLogin() },
-                    onRegisterClick = { navigateToRegistration() }
-                )
+                // Получение ссылки на текущую активность
+                val activity = this@WelcomeActivity
+
+                // LaunchedEffect для проверки состояния входа после задержки
+                LaunchedEffect(Unit) {
+                    delay(1500) // Задержка для демонстрации сплэш-экрана
+                    val sharedPref = activity.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                    val isLoggedIn = sharedPref.getBoolean("is_logged_in", false)
+                    if (isLoggedIn) {
+                        activity.navigateToMain()
+                    }
+                }
+
+                // Отображение WelcomeScreen только если пользователь не вошел
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(largeRadialGradient)
+                ) {
+                    WelcomeScreen(
+                        onLoginClick = { activity.navigateToLogin() },
+                        onRegisterClick = { activity.navigateToRegistration() }
+                    )
+                }
             }
         }
     }
 
+    // Функция для перехода на главный экран
     private fun navigateToMain() {
         val intent = Intent(this, MainActivity::class.java)
+        // Закрываем все предыдущие активности
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
     }
 
+    // Функция для перехода на экран входа
     private fun navigateToLogin() {
         val intent = Intent(this, LoginActivity::class.java)
         startActivity(intent)
     }
 
+    // Функция для перехода на экран регистрации
     private fun navigateToRegistration() {
         val intent = Intent(this, RegistrationActivity::class.java)
         startActivity(intent)

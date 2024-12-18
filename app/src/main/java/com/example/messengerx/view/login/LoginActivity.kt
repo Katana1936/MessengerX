@@ -37,7 +37,6 @@ class LoginActivity : ComponentActivity() {
         auth = FirebaseAuth.getInstance() // Инициализация FirebaseAuth
         tokenDataStoreManager = TokenDataStoreManager(this)
 
-        // Проверка, есть ли сохранённый токен
         lifecycleScope.launch {
             val token = tokenDataStoreManager.token.first()
             if (!token.isNullOrEmpty()) {
@@ -45,7 +44,6 @@ class LoginActivity : ComponentActivity() {
             }
         }
 
-        // Отображение экрана входа
         setContent {
             ThemeMessengerX {
                 LoginScreen(
@@ -62,7 +60,7 @@ class LoginActivity : ComponentActivity() {
                 if (task.isSuccessful) {
                     val token = auth.currentUser?.uid ?: ""
                     lifecycleScope.launch {
-                        tokenDataStoreManager.saveToken(token) 
+                        tokenDataStoreManager.saveToken(token) // Сохраняем токен
                         navigateToMain()
                     }
                 } else {
