@@ -24,18 +24,20 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
     fun addStory(userId: String, story: Story, onComplete: () -> Unit) {
         viewModelScope.launch {
             try {
-                val response = apiService.addStory(userId, story).execute()
-                if (response.isSuccessful) {
+                // Проверка и создание коллекции, если её нет
+                val storyDoc = apiService.addStory(userId, story).execute()
+                if (storyDoc.isSuccessful) {
                     onComplete()
-                    fetchStories(userId)
+                    fetchStories(userId) // Обновляем список историй после добавления
                 } else {
-                    println("Ошибка добавления истории: ${response.errorBody()?.string()}")
+                    println("Ошибка добавления истории: ${storyDoc.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
                 println("Ошибка подключения: ${e.localizedMessage}")
             }
         }
     }
+
 
 
     /**
