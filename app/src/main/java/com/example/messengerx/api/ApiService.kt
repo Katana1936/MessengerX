@@ -60,6 +60,7 @@ interface ApiService {
     @Headers("Accept: application/json")
     @POST("stories/{userId}/userStories.json")
     fun addStory(@Path("userId") userId: String, @Body story: Story): Call<Void>
-
+    @GET("stories.json")
+    fun getAllStories(): Call<Map<String, Story>>
 }
 

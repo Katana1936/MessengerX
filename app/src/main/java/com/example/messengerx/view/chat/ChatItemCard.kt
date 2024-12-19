@@ -67,7 +67,3 @@ data class ChatItem(
     val lastSeen: String,
     val lastMessage: String
 )
-
-
-
-

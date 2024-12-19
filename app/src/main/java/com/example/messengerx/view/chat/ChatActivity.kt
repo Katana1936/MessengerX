@@ -149,6 +149,3 @@ fun MessageItem(message: MessageResponse) {
         )
     }
 }
-
-
-

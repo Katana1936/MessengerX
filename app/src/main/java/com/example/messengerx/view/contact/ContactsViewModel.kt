@@ -19,12 +19,8 @@ class ContactsViewModel(private val apiService: ApiService) : ViewModel() {
     val searchQuery: StateFlow<String> = _searchQuery
 
     val filteredContacts = combine(_contacts, _searchQuery) { contacts, query ->
-        if (query.isEmpty()) {
-            contacts
-        } else {
-            contacts.filter {
-                it.name.contains(query, ignoreCase = true) || it.phone.contains(query)
-            }
+        if (query.isEmpty()) contacts else contacts.filter {
+            it.name.contains(query, ignoreCase = true) || it.phone.contains(query)
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 

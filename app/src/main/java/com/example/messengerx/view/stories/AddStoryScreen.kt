@@ -44,51 +44,52 @@ fun AddStoryScreen(
                     }
                 }
             )
-        },
-        content = { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                if (imageUri == null) {
-                    Button(onClick = {
-                        val file = File(context.getExternalFilesDir(null), "story_${System.currentTimeMillis()}.jpg")
-                        val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
-                        imageUri = uri
-                        takePictureLauncher.launch(uri)
-                    }) {
-                        Text("Сделать фото")
-                    }
-                } else {
-                    AsyncImage(
-                        model = imageUri,
-                        contentDescription = "Предпросмотр",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(16 / 9f)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = {
-                            isUploading = true
-                            val story = Story(
-                                imageUrl = imageUri.toString(),
-                                timestamp = System.currentTimeMillis()
-                            )
-                            viewModel.addStory(userId, story) {
-                                isUploading = false
-                                onStoryPublished()
-                            }
-                        },
-                        enabled = !isUploading
-                    ) {
-                        Text("Опубликовать")
-                    }
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            if (imageUri == null) {
+                Button(onClick = {
+                    val file = File(context.getExternalFilesDir(null), "story_${System.currentTimeMillis()}.jpg")
+                    val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+                    imageUri = uri
+                    takePictureLauncher.launch(uri)
+                }) {
+                    Text("Сделать фото")
+                }
+            } else {
+                AsyncImage(
+                    model = imageUri,
+                    contentDescription = "Предпросмотр",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(16 / 9f)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        isUploading = true
+                        val story = Story(
+                            id = System.currentTimeMillis().toString(),
+                            imageUrl = imageUri.toString(),
+                            timestamp = System.currentTimeMillis(),
+                            userId = userId
+                        )
+                        viewModel.addStory(userId, story) {
+                            isUploading = false
+                            onStoryPublished()
+                        }
+                    },
+                    enabled = !isUploading
+                ) {
+                    Text("Опубликовать")
                 }
             }
         }
-    )
+    }
 }

@@ -25,7 +25,7 @@ class ChatViewModel(private val apiService: ApiService) : ViewModel() {
                     val chatItems = response.body()?.map { (id, chatResponse) ->
                         ChatItem(
                             id = id,
-                            name = chatResponse.participants?.joinToString(", ") ?: "Unknown",
+                            name = chatResponse.participants.joinToString(", "),
                             isOnline = chatResponse.isOnline,
                             lastSeen = chatResponse.lastSeen ?: "Unknown",
                             lastMessage = chatResponse.lastMessage ?: "No message"
@@ -36,10 +36,12 @@ class ChatViewModel(private val apiService: ApiService) : ViewModel() {
                     _errorMessage.value = "Ошибка загрузки чатов: ${response.message()}"
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Ошибка: ${e.localizedMessage}"
+                _errorMessage.value = "Ошибка подключения: ${e.localizedMessage}"
             }
         }
     }
+
+
 
     fun loadMessages(chatId: String) {
         viewModelScope.launch {
