@@ -4,20 +4,22 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -25,6 +27,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import coil.compose.AsyncImage
 import com.example.messengerx.BottomNavigationBar
 import com.example.messengerx.api.ApiService
 import com.example.messengerx.api.RetrofitClient
@@ -33,16 +36,15 @@ import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.chat.ChatItemCard
 import com.example.messengerx.view.chat.ChatScreen
 import com.example.messengerx.view.chat.ChatViewModel
+import com.example.messengerx.view.contact.ContactsScreen
 import com.example.messengerx.view.contact.ContactsViewModel
+import com.example.messengerx.view.contact.ContactsViewModelFactory
 import com.example.messengerx.view.login.LoginActivity
 import com.example.messengerx.view.stories.AddStoryScreen
-import com.example.messengerx.view.stories.StoriesBar
+import com.example.messengerx.view.stories.Story
 import com.example.messengerx.view.stories.StoryViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-
 
 class MainActivity : ComponentActivity() {
     private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
@@ -117,9 +119,6 @@ fun MainScreen(apiService: ApiService) {
     }
 }
 
-
-
-
 @Composable
 fun NavigationHost(
     navController: NavHostController,
@@ -142,34 +141,20 @@ fun NavigationHost(
             )
         }
         composable("contacts") {
-            val contactsViewModel = ContactsViewModel(apiService)
-            ContactsContent(
+            val contactsViewModel = remember {
+                ContactsViewModelFactory(apiService).create(ContactsViewModel::class.java)
+            }
+            ContactsScreen(
                 viewModel = contactsViewModel,
-                onContactClick = { contactId ->
-                    println("Выбран контакт: $contactId")
-                }
+                activity = LocalContext.current as ComponentActivity
             )
-        }
-        composable("account") {
-            PlaceholderScreen("Функционал аккаунта временно недоступен")
-        }
-        composable("settings") {
-            PlaceholderScreen("Настройки временно недоступны")
-        }
-        composable(
-            route = "chat/{chatId}",
-            arguments = listOf(navArgument("chatId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val chatId = backStackEntry.arguments?.getString("chatId") ?: return@composable
-            ChatScreen(chatId = chatId, apiService = apiService)
         }
         composable("add_story") {
             AddStoryScreen(
                 viewModel = storyViewModel,
                 userId = "user1",
                 onStoryPublished = {
-                    navController.popBackStack() // Возвращаемся на предыдущий экран
-                    navController.navigate("chats") // Перезагружаем экран чатов с обновленными историями
+                    navController.popBackStack()
                 },
                 onBack = { navController.popBackStack() }
             )
@@ -177,48 +162,6 @@ fun NavigationHost(
     }
 }
 
-
-
-
-@Composable
-fun ContactsContent(viewModel: ContactsViewModel, onContactClick: (String) -> Unit) {
-    val contactList by viewModel.filteredContacts.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState()
-
-    Scaffold(
-        topBar = {
-            Text("Контакты")
-        }
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
-            LazyColumn {
-                items(contactList, key = { it.id }) { contact ->
-                    Text(
-                        text = contact.name,
-                        modifier = Modifier.padding(8.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-
-@Composable
-fun PlaceholderScreen(message: String) {
-    Scaffold {
-        Column(
-            modifier = Modifier.padding(it)
-        ) {
-            Text(
-                text = message,
-                color = Color.Gray,
-                style = androidx.compose.material3.MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(16.dp)
-            )
-        }
-    }
-}
 
 @Composable
 fun ChatsScreen(
@@ -229,33 +172,63 @@ fun ChatsScreen(
     onChatClick: (String) -> Unit
 ) {
     val chatList by viewModel.chatList.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
+    val stories by storyViewModel.stories.collectAsState()
 
     Scaffold { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            StoriesBar(
-                viewModel = storyViewModel,
-                userId = userId
+            // Карусель историй
+            StoriesCarousel(
+                stories = stories,
+                onAddStoryClick = { navController.navigate("add_story") }
             )
 
-            if (!errorMessage.isNullOrEmpty()) {
-                Text(
-                    text = "Ошибка: $errorMessage",
-                    color = Color.Red,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-
-            LazyColumn {
-                items(chatList, key = { it.id }) { chat ->
-                    ChatItemCard(chat = chat) {
-                        onChatClick(chat.id)
+            if (chatList.isNotEmpty()) {
+                LazyColumn {
+                    items(chatList) { chat ->
+                        ChatItemCard(chat = chat) {
+                            onChatClick(chat.id)
+                        }
                     }
                 }
+            } else {
+                Text("Чатов пока нет")
             }
         }
     }
 }
 
+@Composable
+fun StoriesCarousel(
+    stories: List<Story>,
+    onAddStoryClick: () -> Unit
+) {
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Кнопка добавления новой истории
+        item {
+            Box(
+                modifier = Modifier
+                    .size(75.dp)
+                    .background(Color.Gray)
+                    .clickable { onAddStoryClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text("+", style = MaterialTheme.typography.headlineMedium, color = Color.White)
+            }
+        }
 
-
+        // Существующие истории
+        items(stories) { story ->
+            AsyncImage(
+                model = story.imageUrl,
+                contentDescription = "История",
+                modifier = Modifier.size(75.dp),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+            )
+        }
+    }
+}

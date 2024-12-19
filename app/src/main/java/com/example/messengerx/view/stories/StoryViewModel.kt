@@ -1,9 +1,5 @@
 package com.example.messengerx.view.stories
 
-import android.net.Uri
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.messengerx.api.ApiService
@@ -13,8 +9,7 @@ import kotlinx.coroutines.launch
 
 data class Story(
     val imageUrl: String = "",
-    val timestamp: Long = 0L,
-    val caption: String = ""
+    val timestamp: Long = 0L
 )
 
 class StoryViewModel(private val apiService: ApiService) : ViewModel() {
@@ -24,39 +19,28 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
     fun addStory(userId: String, story: Story, onComplete: () -> Unit) {
         viewModelScope.launch {
             try {
-                // Проверка и создание коллекции, если её нет
-                val storyDoc = apiService.addStory(userId, story).execute()
-                if (storyDoc.isSuccessful) {
+                val response = apiService.addStory(userId, story).execute()
+                if (response.isSuccessful) {
+                    fetchStories(userId)
                     onComplete()
-                    fetchStories(userId) // Обновляем список историй после добавления
-                } else {
-                    println("Ошибка добавления истории: ${storyDoc.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
-                println("Ошибка подключения: ${e.localizedMessage}")
+                println("Ошибка добавления истории: ${e.localizedMessage}")
             }
         }
     }
 
-
-
-    /**
-     * Загрузка списка историй
-     */
     fun fetchStories(userId: String) {
         viewModelScope.launch {
             try {
                 val response = apiService.getUserStories(userId).execute()
                 if (response.isSuccessful) {
-                    val storiesList = response.body()?.values?.toList() ?: emptyList()
-                    _stories.value = storiesList
-                } else {
-                    println("Ошибка получения историй: ${response.errorBody()?.string()}")
+                    val stories = response.body()?.values?.toList() ?: emptyList()
+                    _stories.value = stories
                 }
             } catch (e: Exception) {
-                println("Ошибка подключения: ${e.localizedMessage}")
+                println("Ошибка получения историй: ${e.localizedMessage}")
             }
         }
     }
 }
-
