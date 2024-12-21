@@ -7,7 +7,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -129,10 +128,11 @@ fun NavigationHost(
         modifier = modifier
     ) {
         composable("chats") {
+            val chatViewModel = remember { ChatViewModel(apiService) } // Инициализация ChatViewModel
             ChatsScreen(
-                viewModel = ChatViewModel(apiService),
+                viewModel = chatViewModel,
                 storyViewModel = storyViewModel,
-                userId = "user1",
+                userId = "user1", // Замените на актуального пользователя
                 onChatClick = { chatId -> navController.navigate("chat/$chatId") },
                 navController = navController
             )
@@ -141,8 +141,6 @@ fun NavigationHost(
             val contactsViewModel = remember { ContactsViewModelFactory(apiService).create(ContactsViewModel::class.java) }
             ContactsScreen(viewModel = contactsViewModel)
         }
-
-
 
         composable("account") {
             PlaceholderScreen("Функционал аккаунта временно недоступен")
@@ -170,6 +168,7 @@ fun NavigationHost(
         }
     }
 }
+
 
 @Composable
 fun ChatsScreen(

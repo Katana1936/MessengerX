@@ -1,12 +1,7 @@
 package com.example.messengerx.api
 
-import com.example.messengerx.view.chat.ChatRequest
-import com.example.messengerx.view.chat.ChatResponse
-import com.example.messengerx.view.chat.MessageRequest
-import com.example.messengerx.view.chat.MessageResponse
 import com.example.messengerx.view.contact.ContactRequest
 import com.example.messengerx.view.contact.ContactResponse
-import com.example.messengerx.view.stories.Story
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -68,6 +63,42 @@ interface ApiService {
         val imageUrl: String = "",
         val timestamp: Long = 0L,
         val userId: String = ""
+    )
+
+    data class ChatItem(
+        val id: String,
+        val name: String,
+        val photoUrl: String
+    )
+
+
+    data class ChatRequest(
+        val participants: List<String>,
+        val lastMessage: String,
+        val timestamp: Long
+    )
+
+    data class ChatResponse(
+        val isOnline: Boolean = false,
+        val lastSeen: String = "",
+        val participants: List<String> = emptyList(),
+        val name: String = "",
+        val timestamp: Long = 0L,
+        val lastMessage: String = ""
+    )
+
+
+
+    data class MessageRequest(
+        val senderId: String,
+        val message: String,
+        val timestamp: Long
+    )
+
+    data class MessageResponse(
+        val senderId: String,
+        val message: String,
+        val timestamp: Long
     )
 
 }

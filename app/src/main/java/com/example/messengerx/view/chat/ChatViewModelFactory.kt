@@ -1,5 +1,6 @@
 package com.example.messengerx.view.chat
 
+import ChatViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.messengerx.api.ApiService
@@ -9,6 +10,6 @@ class ChatViewModelFactory(private val apiService: ApiService) : ViewModelProvid
         if (modelClass.isAssignableFrom(ChatViewModel::class.java)) {
             return ChatViewModel(apiService) as T
         }
-        throw IllegalArgumentException("Unknown ViewModel class")
+        throw IllegalArgumentException("Неизвестный класс ViewModel")
     }
 }
