@@ -1,5 +1,6 @@
 package com.example.messengerx.view
 
+import ChatViewModel
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -30,7 +31,6 @@ import com.example.messengerx.api.TokenDataStoreManager
 import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.chat.ChatItemCard
 import com.example.messengerx.view.chat.ChatScreen
-import com.example.messengerx.view.chat.ChatViewModel
 import com.example.messengerx.view.contact.ContactsScreen
 import com.example.messengerx.view.contact.ContactsViewModel
 import com.example.messengerx.view.contact.ContactsViewModelFactory
@@ -132,8 +132,8 @@ fun NavigationHost(
             ChatsScreen(
                 viewModel = chatViewModel,
                 storyViewModel = storyViewModel,
-                userId = "user1", // Замените на актуального пользователя
-                onChatClick = { chatId -> navController.navigate("chat/$chatId") },
+                userId = "user1",
+//                onChatClick = { chatId -> /* Переход к чату */ },
                 navController = navController
             )
         }

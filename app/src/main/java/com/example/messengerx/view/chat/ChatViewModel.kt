@@ -18,7 +18,6 @@ class ChatViewModel(private val apiService: ApiService) : ViewModel() {
             try {
                 val response = apiService.getChats().execute()
                 if (response.isSuccessful) {
-                    // Преобразуем ответ в список ChatItem
                     val chatItems = response.body()?.map { (id, chatResponse) ->
                         ApiService.ChatItem(
                             id = id,
