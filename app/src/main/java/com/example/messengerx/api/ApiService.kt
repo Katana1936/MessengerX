@@ -62,5 +62,13 @@ interface ApiService {
     fun addStory(@Path("userId") userId: String, @Body story: Story): Call<Void>
     @GET("stories.json")
     fun getAllStories(): Call<Map<String, Story>>
+
+    data class Story(
+        val id: String = "",
+        val imageUrl: String = "",
+        val timestamp: Long = 0L,
+        val userId: String = ""
+    )
+
 }
 

@@ -1,45 +1,50 @@
 package com.example.messengerx.view.stories
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.messengerx.firebase.FirestoreHelper
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.messengerx.api.ApiService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-class StoryViewModel : ViewModel() {
+class StoryViewModel(private val apiService: ApiService) : ViewModel() {
+
     private val _stories = MutableStateFlow<List<Story>>(emptyList())
     val stories: StateFlow<List<Story>> = _stories
 
-    fun addStory(userId: String, story: Story, onComplete: () -> Unit) {
-        FirestoreHelper.firestore.collection("stories")
-            .document(userId)
-            .collection("userStories")
-            .document(story.id)
-            .set(story)
-            .addOnSuccessListener { onComplete() }
-            .addOnFailureListener { println("Ошибка добавления истории") }
+    fun fetchStories(userId: String) {
+        apiService.getUserStories(userId).enqueue(object : Callback<Map<String, Story>> {
+            override fun onResponse(call: Call<Map<String, Story>>, response: Response<Map<String, Story>>) {
+                if (response.isSuccessful) {
+                    val storyList = response.body()?.values?.toList() ?: emptyList()
+                    _stories.value = storyList
+                } else {
+                    println("Ошибка получения историй: ${response.errorBody()?.string()}")
+                }
+            }
+
+            override fun onFailure(call: Call<Map<String, Story>>, t: Throwable) {
+                println("Ошибка сети: ${t.message}")
+            }
+        })
     }
 
-    fun fetchStories(userId: String) {
-        FirestoreHelper.firestore.collection("stories")
-            .document(userId)
-            .collection("userStories")
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                val storyList = querySnapshot.documents.mapNotNull { it.toObject(Story::class.java) }
-                _stories.value = storyList
+    fun addStory(userId: String, story: Story, onComplete: () -> Unit) {
+        apiService.addStory(userId, story).enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                if (response.isSuccessful) {
+                    onComplete()
+                } else {
+                    println("Ошибка добавления истории: ${response.errorBody()?.string()}")
+                }
             }
-            .addOnFailureListener { println("Ошибка загрузки историй") }
+
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                println("Ошибка сети: ${t.message}")
+            }
+        })
     }
 }
 
 
-
-data class Story(
-    val id: String = "",
-    val imageUrl: String = "",
-    val timestamp: Long = 0L,
-    val userId: String = ""
-)
