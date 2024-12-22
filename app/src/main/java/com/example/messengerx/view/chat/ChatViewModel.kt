@@ -12,7 +12,6 @@ class ChatViewModel(private val apiService: ApiService) : ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    // Метод для загрузки списка чатов
     fun loadChats() {
         viewModelScope.launch {
             try {
@@ -21,8 +20,7 @@ class ChatViewModel(private val apiService: ApiService) : ViewModel() {
                     val chatItems = response.body()?.map { (id, chatResponse) ->
                         ApiService.ChatItem(
                             id = id,
-                            name = chatResponse.name ?: "Без имени",
-                            photoUrl = chatResponse.photoUrl ?: ""
+                            name = chatResponse.name ?: "Без имени"
                         )
                     } ?: emptyList()
                     _chatList.value = chatItems
@@ -35,3 +33,5 @@ class ChatViewModel(private val apiService: ApiService) : ViewModel() {
         }
     }
 }
+
+

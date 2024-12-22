@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
+import com.example.messengerx.api.ApiService
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,7 +75,7 @@ fun AddStoryScreen(
                 Button(
                     onClick = {
                         isUploading = true
-                        val story = Story(
+                        val story = ApiService.Story(
                             id = System.currentTimeMillis().toString(),
                             imageUrl = imageUri.toString(),
                             timestamp = System.currentTimeMillis(),

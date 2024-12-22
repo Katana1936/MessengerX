@@ -10,27 +10,28 @@ import retrofit2.Response
 
 class StoryViewModel(private val apiService: ApiService) : ViewModel() {
 
-    private val _stories = MutableStateFlow<List<Story>>(emptyList())
-    val stories: StateFlow<List<Story>> = _stories
+    private val _stories = MutableStateFlow<List<ApiService.Story>>(emptyList())
+    val stories: StateFlow<List<ApiService.Story>> = _stories
 
     fun fetchStories(userId: String) {
-        apiService.getUserStories(userId).enqueue(object : Callback<Map<String, Story>> {
-            override fun onResponse(call: Call<Map<String, Story>>, response: Response<Map<String, Story>>) {
+        apiService.getUserStories(userId).enqueue(object : Callback<Map<String, ApiService.Story>> {
+            override fun onResponse(call: Call<Map<String, ApiService.Story>>, response: Response<Map<String, ApiService.Story>>) {
                 if (response.isSuccessful) {
-                    val storyList = response.body()?.values?.toList() ?: emptyList()
+                    val storyList = response.body()?.values?.filter { it.userId == userId } ?: emptyList()
                     _stories.value = storyList
                 } else {
                     println("Ошибка получения историй: ${response.errorBody()?.string()}")
                 }
             }
 
-            override fun onFailure(call: Call<Map<String, Story>>, t: Throwable) {
+            override fun onFailure(call: Call<Map<String, ApiService.Story>>, t: Throwable) {
                 println("Ошибка сети: ${t.message}")
             }
         })
     }
 
-    fun addStory(userId: String, story: Story, onComplete: () -> Unit) {
+
+    fun addStory(userId: String, story: ApiService.Story, onComplete: () -> Unit) {
         apiService.addStory(userId, story).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {

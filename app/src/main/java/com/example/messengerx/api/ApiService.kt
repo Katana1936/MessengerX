@@ -59,17 +59,18 @@ interface ApiService {
     fun getAllStories(): Call<Map<String, Story>>
 
     data class Story(
-        val id: String = "",
-        val imageUrl: String = "",
-        val timestamp: Long = 0L,
-        val userId: String = ""
+        val id: String,
+        val imageUrl: String,
+        val timestamp: Long,
+        val userId: String
     )
+
 
     data class ChatItem(
         val id: String,
-        val name: String,
-        val photoUrl: String
+        val name: String
     )
+
 
 
     data class ChatRequest(

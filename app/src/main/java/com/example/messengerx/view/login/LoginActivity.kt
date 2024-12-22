@@ -5,12 +5,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -20,12 +21,9 @@ import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.MainActivity
 import com.example.messengerx.view.registration.RegistrationActivity
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
-val loginGradient = Brush.verticalGradient(
-    colors = listOf(Color(0xFF2BE4DC), Color(0xFF243484))
-)
 
 class LoginActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
@@ -34,7 +32,7 @@ class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        auth = FirebaseAuth.getInstance() // Инициализация FirebaseAuth
+        auth = FirebaseAuth.getInstance()
         tokenDataStoreManager = TokenDataStoreManager(this)
 
         lifecycleScope.launch {
@@ -60,7 +58,7 @@ class LoginActivity : ComponentActivity() {
                 if (task.isSuccessful) {
                     val token = auth.currentUser?.uid ?: ""
                     lifecycleScope.launch {
-                        tokenDataStoreManager.saveToken(token) // Сохраняем токен
+                        tokenDataStoreManager.saveToken(token)
                         navigateToMain()
                     }
                 } else {
@@ -79,6 +77,7 @@ class LoginActivity : ComponentActivity() {
         startActivity(Intent(this, RegistrationActivity::class.java))
     }
 }
+
 @Composable
 fun LoginScreen(onLogin: (String, String) -> Unit, onRegisterClick: () -> Unit) {
     var email by remember { mutableStateOf("") }
@@ -89,31 +88,36 @@ fun LoginScreen(onLogin: (String, String) -> Unit, onRegisterClick: () -> Unit) 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(loginGradient)
+            .background(Color.White)
             .padding(16.dp)
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.CenterStart)
+                .offset(y = 40.dp),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Вход", style = MaterialTheme.typography.headlineMedium, color = Color.White)
+            Text(
+                text = "Login",
+                style = MaterialTheme.typography.displayMedium,
+                color = Color.Black
+            )
             Spacer(modifier = Modifier.height(20.dp))
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Электронная почта") },
+                label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(10.dp))
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Пароль") },
+                label = { Text("Password") },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation()
             )
-            Spacer(modifier = Modifier.height(10.dp))
             if (errorMessage.isNotEmpty()) {
                 Text(errorMessage, color = Color.Red)
                 Spacer(modifier = Modifier.height(10.dp))
@@ -121,22 +125,35 @@ fun LoginScreen(onLogin: (String, String) -> Unit, onRegisterClick: () -> Unit) 
             if (isLoading) {
                 CircularProgressIndicator()
             } else {
-                Button(onClick = {
-                    if (email.isNotBlank() && password.isNotBlank()) {
-                        isLoading = true
-                        errorMessage = ""
-                        onLogin(email, password)
-                    } else {
-                        errorMessage = "Заполните все поля"
-                    }
-                }) {
-                    Text("Войти")
+                Button(
+                    onClick = {
+                        if (email.isNotBlank() && password.isNotBlank()) {
+                            isLoading = true
+                            errorMessage = ""
+                            onLogin(email, password)
+                        } else {
+                            errorMessage = "Please fill out all fields"
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFF2681B)
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f)
+                        .height(45.dp)
+                ) {
+                    Text("Log In", color = Color.White)
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))
-            TextButton(onClick = onRegisterClick) {
-                Text("Нет аккаунта? Зарегистрироваться", color = Color.White)
-            }
+            Text(
+                text = "If you don't have an account, sign up.",
+                color = Color.Gray,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.clickable(onClick = onRegisterClick)
+            )
         }
     }
 }
+

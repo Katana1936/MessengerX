@@ -36,7 +36,7 @@ class ChatActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(chatId: String, apiService: ApiService) {
-    var messages by remember { mutableStateOf<List<MessageResponse>>(emptyList()) }
+    var messages by remember { mutableStateOf<List<ApiService.MessageResponse>>(emptyList()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var messageText by remember { mutableStateOf("") }
 
@@ -120,9 +120,9 @@ fun sendMessage(
     senderId: String,
     message: String,
     apiService: ApiService,
-    onMessagesUpdated: (List<MessageResponse>) -> Unit
+    onMessagesUpdated: (List<ApiService.MessageResponse>) -> Unit
 ) {
-    val messageRequest = MessageRequest(senderId, message, System.currentTimeMillis())
+    val messageRequest = ApiService.MessageRequest(senderId, message, System.currentTimeMillis())
     kotlinx.coroutines.GlobalScope.launch {
         try {
             val response = apiService.sendMessage(chatId, messageRequest).execute()
@@ -137,7 +137,7 @@ fun sendMessage(
 }
 
 @Composable
-fun MessageItem(message: MessageResponse) {
+fun MessageItem(message: ApiService.MessageResponse) {
     Column(modifier = Modifier.padding(8.dp)) {
         Text(
             text = "От: ${message.senderId}",
