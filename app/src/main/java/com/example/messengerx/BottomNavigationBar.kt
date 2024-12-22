@@ -14,24 +14,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.HazeStyle
-import dev.chrisbanes.haze.HazeTint
-import dev.chrisbanes.haze.hazeChild
-import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 
-@OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 fun BottomNavigationBar(
-    hazeState: HazeState,
     modifier: Modifier = Modifier,
     onItemSelected: (String) -> Unit,
-    backgroundColor: Color = Color.Transparent,
-    blurRadius: Dp = 25.dp,
-    tintColors: List<Color> = listOf(Color.White.copy(alpha = 0.1f)),
-    noiseFactor: Float = 0.0f
+    backgroundColor: Color = Color.White
 ) {
     var selectedItem by remember { mutableStateOf(0) }
 
@@ -45,9 +33,7 @@ fun BottomNavigationBar(
     )
 
     NavigationBar(
-        modifier = modifier
-            .hazeChild(state = hazeState, style = CustomHazeStyle())
-            .fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         containerColor = backgroundColor
     ) {
         items.forEachIndexed { index, item ->
@@ -55,7 +41,7 @@ fun BottomNavigationBar(
 
             // Анимация цвета и масштаба для иконок
             val iconColor by animateColorAsState(
-                targetValue = if (isSelected) Color.White else Color.Gray
+                targetValue = if (isSelected) Color.Black else Color.Gray
             )
             val scale by animateFloatAsState(
                 targetValue = if (isSelected) 1.2f else 1.0f
@@ -73,7 +59,7 @@ fun BottomNavigationBar(
                 label = {
                     Text(
                         text = item,
-                        color = if (isSelected) Color.White else Color.Gray,
+                        color = if (isSelected) Color.Black else Color.Gray,
                         style = MaterialTheme.typography.labelSmall
                     )
                 },
@@ -83,30 +69,12 @@ fun BottomNavigationBar(
                     onItemSelected(routes[index])
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color.White,
+                    selectedIconColor = Color.Black,
                     unselectedIconColor = Color.Gray,
-                    selectedTextColor = Color.White,
+                    selectedTextColor = Color.Black,
                     unselectedTextColor = Color.Gray
                 )
             )
         }
-    }
-}
-
-@Composable
-fun CustomHazeStyle(
-    backgroundColor: Color = Color.Transparent,
-    blurRadius: Dp = 30.dp, // Увеличьте радиус для сильного эффекта
-    tintColors: List<Color> = listOf(Color.White.copy(alpha = 0.15f)), // Прозрачность
-    noiseFactor: Float = 0.05f // Небольшой шум
-): HazeStyle {
-    return remember {
-        HazeStyle(
-            backgroundColor = backgroundColor,
-            tints = tintColors.map { HazeTint(color = it) },
-            blurRadius = blurRadius,
-            noiseFactor = noiseFactor,
-            fallbackTint = HazeTint(color = tintColors.firstOrNull() ?: Color.Transparent)
-        )
     }
 }

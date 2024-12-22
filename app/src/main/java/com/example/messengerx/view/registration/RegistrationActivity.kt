@@ -28,6 +28,9 @@ class RegistrationActivity : ComponentActivity() {
     private lateinit var tokenDataStoreManager: TokenDataStoreManager
     private val firestore = FirebaseFirestore.getInstance()
 
+    // Объявляем isLoading для управления состоянием
+    private var isLoading by mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -36,12 +39,15 @@ class RegistrationActivity : ComponentActivity() {
 
         setContent {
             ThemeMessengerX {
-                RegistrationScreen { email, password, nickname -> registerUser(email, password, nickname) }
+                RegistrationScreen { email, password, nickname ->
+                    registerUser(email, password, nickname)
+                }
             }
         }
     }
 
     private fun registerUser(email: String, password: String, nickname: String) {
+        isLoading = true // Устанавливаем состояние загрузки
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -54,32 +60,31 @@ class RegistrationActivity : ComponentActivity() {
                             "uid" to userId
                         )
 
+                        // Сохраняем данные пользователя в Firestore
                         firestore.collection("users").document(userId)
                             .set(userMap)
                             .addOnSuccessListener {
-                                user.sendEmailVerification()
-                                    .addOnCompleteListener { emailTask ->
-                                        if (emailTask.isSuccessful) {
-                                            println("Письмо для подтверждения отправлено")
-                                        } else {
-                                            println("Ошибка отправки письма: ${emailTask.exception?.message}")
-                                        }
-                                    }
-
                                 lifecycleScope.launch {
-                                    tokenDataStoreManager.saveToken(userId)
-                                    navigateToMain()
+                                    tokenDataStoreManager.saveToken(userId) // Сохраняем токен
+                                    isLoading = false // Убираем состояние загрузки
+                                    navigateToMain() // Переходим на MainActivity
                                 }
                             }
                             .addOnFailureListener { e ->
                                 println("Ошибка сохранения данных пользователя: ${e.message}")
+                                isLoading = false
                             }
+                    } else {
+                        println("Ошибка: пользователь равен null")
+                        isLoading = false
                     }
                 } else {
                     println("Ошибка регистрации: ${task.exception?.message}")
+                    isLoading = false
                 }
             }
     }
+
 
     private fun navigateToMain() {
         val intent = Intent(this, MainActivity::class.java)
@@ -87,6 +92,7 @@ class RegistrationActivity : ComponentActivity() {
         startActivity(intent)
     }
 }
+
 
 @Composable
 fun RegistrationScreen(onRegisterSuccess: (String, String, String) -> Unit) {

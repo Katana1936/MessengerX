@@ -70,8 +70,6 @@ dependencies {
 
 
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.haze.materials)
-    implementation(libs.haze)
     implementation (libs.coil.compose)
     implementation (libs.androidx.lifecycle.viewmodel.ktx)
     implementation (libs.androidx.lifecycle.livedata.ktx)

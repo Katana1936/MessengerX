@@ -73,6 +73,7 @@ class LoginActivity : ComponentActivity() {
         startActivity(intent)
     }
 
+
     private fun navigateToRegistration() {
         startActivity(Intent(this, RegistrationActivity::class.java))
     }

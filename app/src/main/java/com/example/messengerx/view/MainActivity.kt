@@ -67,7 +67,10 @@ class MainActivity : ComponentActivity() {
             val apiService = RetrofitClient.getInstance()
             val storyDataStore = StoryDataStore(this)
             ThemeMessengerX {
-                MainScreen(apiService = apiService, storyDataStore = storyDataStore)
+                MainScreen(
+                    apiService = apiService,
+                    storyDataStore = storyDataStore
+                )
             }
         }
     }
@@ -95,15 +98,12 @@ fun MainScreen(apiService: ApiService, storyDataStore: StoryDataStore) {
 
     Scaffold(
         bottomBar = {
-            BottomNavigationBar(
-                hazeState = dev.chrisbanes.haze.HazeState(),
-                onItemSelected = { route ->
-                    navController.navigate(route) {
-                        launchSingleTop = true
-                        restoreState = true
-                    }
+            BottomNavigationBar(onItemSelected = { route ->
+                navController.navigate(route) {
+                    launchSingleTop = true
+                    restoreState = true
                 }
-            )
+            })
         }
     ) { innerPadding ->
         NavigationHost(
@@ -114,6 +114,7 @@ fun MainScreen(apiService: ApiService, storyDataStore: StoryDataStore) {
         )
     }
 }
+
 
 @Composable
 fun NavigationHost(
@@ -133,8 +134,8 @@ fun NavigationHost(
                 viewModel = chatViewModel,
                 storyDataStore = storyDataStore,
                 userId = "user1",
-                onChatClick = { chatId -> /* Переход к чату */ },
-                navController = navController
+                navController = navController,
+                onChatClick = { /* Переход к чату временно отключен */ }
             )
         }
         composable("contacts") {
@@ -143,20 +144,15 @@ fun NavigationHost(
         }
 
         composable("account") {
-            PlaceholderScreen("Функционал аккаунта временно недоступен")
+            PlaceholderScreen("Аккаунт временно недоступен")
         }
         composable("settings") {
             PlaceholderScreen("Настройки временно недоступны")
         }
-        composable(
-            route = "chat/{chatId}",
-            arguments = listOf(navArgument("chatId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val chatId = backStackEntry.arguments?.getString("chatId") ?: return@composable
-            ChatScreen(chatId = chatId, apiService = apiService)
-        }
     }
 }
+
+
 
 @Composable
 fun ChatsScreen(
