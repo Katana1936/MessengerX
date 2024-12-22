@@ -40,7 +40,6 @@ fun ChatScreen(chatId: String, apiService: ApiService) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var messageText by remember { mutableStateOf("") }
 
-    // Загружаем сообщения при открытии экрана
     LaunchedEffect(chatId) {
         try {
             val response = apiService.getMessages(chatId).execute()
