@@ -4,8 +4,11 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import com.example.messengerx.api.ApiService
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -16,21 +19,21 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
     val stories: StateFlow<List<ApiService.Story>> = _stories
 
     fun fetchStories(userId: String) {
-        apiService.getUserStories(userId).enqueue(object : Callback<Map<String, ApiService.Story>> {
-            override fun onResponse(call: Call<Map<String, ApiService.Story>>, response: Response<Map<String, ApiService.Story>>) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = apiService.getUserStories(userId).execute()
                 if (response.isSuccessful) {
                     val storyList = response.body()?.values?.toList() ?: emptyList()
                     _stories.value = storyList
                 } else {
                     println("Ошибка получения историй: ${response.errorBody()?.string()}")
                 }
+            } catch (e: Exception) {
+                println("Ошибка сети: ${e.message}")
             }
-
-            override fun onFailure(call: Call<Map<String, ApiService.Story>>, t: Throwable) {
-                println("Ошибка сети: ${t.message}")
-            }
-        })
+        }
     }
+
 
     fun uploadStoryImage(
         userId: String,

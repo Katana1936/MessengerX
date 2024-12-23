@@ -37,6 +37,7 @@ import com.example.messengerx.view.contact.ContactsScreen
 import com.example.messengerx.view.contact.ContactsViewModel
 import com.example.messengerx.view.contact.ContactsViewModelFactory
 import com.example.messengerx.view.login.LoginActivity
+import com.example.messengerx.view.stories.AddStoryScreen
 import com.example.messengerx.view.stories.StoryViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -120,13 +121,18 @@ fun NavigationHost(
                 }
             )
         }
+
         composable("contacts") {
-            val contactsViewModel = remember { ContactsViewModelFactory(apiService).create(ContactsViewModel::class.java) }
+            val contactsViewModel = remember {
+                ContactsViewModelFactory(apiService).create(ContactsViewModel::class.java)
+            }
             ContactsScreen(viewModel = contactsViewModel)
         }
+
         composable("account") {
             PlaceholderScreen("Аккаунт временно недоступен")
         }
+
         composable("settings") {
             PlaceholderScreen("Настройки временно недоступны")
         }
@@ -147,8 +153,23 @@ fun NavigationHost(
                 apiService = apiService
             )
         }
+
+        composable("add_story") {
+            val storyViewModel = remember { StoryViewModel(apiService) }
+            AddStoryScreen(
+                viewModel = storyViewModel,
+                userId = "user1",
+                onStoryPublished = {
+                    navController.popBackStack()
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
     }
 }
+
 
 @Composable
 fun ChatsScreen(
@@ -156,7 +177,8 @@ fun ChatsScreen(
     storyViewModel: StoryViewModel,
     userId: String,
     apiService: ApiService,
-    onChatClick: (String, String) -> Unit
+    onChatClick: (String, String) -> Unit,
+    onAddStoryClick: () -> Unit // Добавляем параметр для обработки добавления истории
 ) {
     val chatList by chatViewModel.chatList.collectAsState()
     val errorMessage by chatViewModel.errorMessage.collectAsState()
@@ -170,7 +192,7 @@ fun ChatsScreen(
             StoriesBar(
                 viewModel = storyViewModel,
                 userId = userId,
-                onAddStoryClick = onAddStoryClick,
+                onAddStoryClick = onAddStoryClick, // Передаем обработчик
                 modifier = Modifier.padding(8.dp)
             )
 
