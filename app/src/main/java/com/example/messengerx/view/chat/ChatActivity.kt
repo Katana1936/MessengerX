@@ -1,22 +1,21 @@
 package com.example.messengerx.view.chat
 
+import ChatViewModel
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.messengerx.api.ApiService
 import com.example.messengerx.api.RetrofitClient
 import com.example.messengerx.ui.theme.ThemeMessengerX
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.launch
 
 class ChatActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,10 +23,11 @@ class ChatActivity : ComponentActivity() {
 
         val apiService = RetrofitClient.getInstance()
         val chatId = intent.getStringExtra("chatId") ?: return
+        val chatName = intent.getStringExtra("chatName") ?: "Chat"
 
         setContent {
             ThemeMessengerX {
-                ChatScreen(chatId = chatId, apiService = apiService)
+                ChatScreen(chatId = chatId, chatName = chatName, apiService = apiService)
             }
         }
     }
@@ -35,31 +35,22 @@ class ChatActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScreen(chatId: String, apiService: ApiService) {
-    var messages by remember { mutableStateOf<List<ApiService.MessageResponse>>(emptyList()) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+fun ChatScreen(chatId: String, chatName: String, apiService: ApiService) {
+    val viewModel: ChatViewModel = viewModel(factory = ChatViewModelFactory(apiService))
     var messageText by remember { mutableStateOf("") }
 
-    LaunchedEffect(chatId) {
-        try {
-            val response = apiService.getMessages(chatId).execute()
-            if (response.isSuccessful) {
-                messages = response.body()?.values?.sortedBy { it.timestamp } ?: emptyList()
-            } else {
-                errorMessage = "Ошибка загрузки сообщений: ${response.message()}"
-            }
-        } catch (e: Exception) {
-            errorMessage = "Ошибка: ${e.localizedMessage}"
-        }
+    // Load messages when the screen is launched
+    LaunchedEffect(Unit) {
+        viewModel.loadMessages(chatId)
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Чат $chatId") },
+                title = { Text(chatName) },
                 navigationIcon = {
-                    IconButton(onClick = { /* Обработка возврата */ }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
+                    IconButton(onClick = { /* Handle back navigation */ }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -70,67 +61,50 @@ fun ChatScreen(chatId: String, apiService: ApiService) {
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            if (!errorMessage.isNullOrEmpty()) {
-                Text(
-                    text = errorMessage!!,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
-
+            // Display chat messages
             LazyColumn(modifier = Modifier.weight(1f)) {
-                items(messages) { message ->
+                items(viewModel.messages) { message ->
                     MessageItem(message)
                 }
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-            ) {
-                TextField(
-                    value = messageText,
-                    onValueChange = { messageText = it },
-                    placeholder = { Text("Введите сообщение") },
-                    modifier = Modifier.weight(1f)
-                )
-                Button(
-                    onClick = {
-                        if (messageText.isNotBlank()) {
-                            sendMessage(chatId, "user1", messageText, apiService) {
-                                messages = it
-                            }
-                            messageText = ""
-                        }
-                    },
-                    modifier = Modifier.padding(start = 8.dp)
-                ) {
-                    Text("Отправить")
+            // Input field for sending messages
+            UserInput(
+                messageText = messageText,
+                onMessageTextChange = { messageText = it },
+                onMessageSend = {
+                    if (messageText.isNotBlank()) {
+                        viewModel.sendMessage(chatId, "user1", messageText)
+                        messageText = ""
+                    }
                 }
-            }
+            )
         }
     }
 }
 
-@OptIn(DelicateCoroutinesApi::class)
-fun sendMessage(
-    chatId: String,
-    senderId: String,
-    message: String,
-    apiService: ApiService,
-    onMessagesUpdated: (List<ApiService.MessageResponse>) -> Unit
+@Composable
+fun UserInput(
+    messageText: String,
+    onMessageTextChange: (String) -> Unit,
+    onMessageSend: () -> Unit
 ) {
-    val messageRequest = ApiService.MessageRequest(senderId, message, System.currentTimeMillis())
-    kotlinx.coroutines.GlobalScope.launch {
-        try {
-            val response = apiService.sendMessage(chatId, messageRequest).execute()
-            if (response.isSuccessful) {
-                val updatedMessages = apiService.getMessages(chatId).execute().body()?.values?.sortedBy { it.timestamp } ?: emptyList()
-                onMessagesUpdated(updatedMessages)
-            }
-        } catch (e: Exception) {
-            println("Ошибка отправки сообщения: ${e.localizedMessage}")
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        TextField(
+            value = messageText,
+            onValueChange = onMessageTextChange,
+            placeholder = { Text("Enter message") },
+            modifier = Modifier.weight(1f)
+        )
+        Button(
+            onClick = onMessageSend,
+            modifier = Modifier.padding(start = 8.dp)
+        ) {
+            Text("Send")
         }
     }
 }
@@ -139,7 +113,7 @@ fun sendMessage(
 fun MessageItem(message: ApiService.MessageResponse) {
     Column(modifier = Modifier.padding(8.dp)) {
         Text(
-            text = "От: ${message.senderId}",
+            text = "From: ${message.senderId}",
             style = MaterialTheme.typography.labelSmall
         )
         Text(

@@ -11,17 +11,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -134,38 +134,51 @@ fun NavigationHost(
                 viewModel = chatViewModel,
                 storyDataStore = storyDataStore,
                 userId = "user1",
-                navController = navController,
-                onChatClick = { /* Переход к чату временно отключен */ }
+                onChatClick = { chatId, chatName ->
+                    navController.navigate("chat/$chatId/${chatName}")
+                }
             )
         }
         composable("contacts") {
             val contactsViewModel = remember { ContactsViewModelFactory(apiService).create(ContactsViewModel::class.java) }
             ContactsScreen(viewModel = contactsViewModel)
         }
-
         composable("account") {
             PlaceholderScreen("Аккаунт временно недоступен")
         }
         composable("settings") {
             PlaceholderScreen("Настройки временно недоступны")
         }
+
+        composable(
+            route = "chat/{chatId}/{chatName}",
+            arguments = listOf(
+                navArgument("chatId") { type = NavType.StringType },
+                navArgument("chatName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val chatId = backStackEntry.arguments?.getString("chatId") ?: return@composable
+            val chatName = backStackEntry.arguments?.getString("chatName") ?: "Чат"
+
+            ChatScreen(
+                chatId = chatId,
+                chatName = chatName,
+                apiService = apiService
+            )
+        }
     }
 }
 
 
 
+
 @Composable
 fun ChatsScreen(
-    viewModel: ChatViewModel,
+    viewModel: ChatViewModel = viewModel(),
     storyDataStore: StoryDataStore,
     userId: String,
-    navController: NavController,
-    onChatClick: (String) -> Unit
+    onChatClick: (String, String) -> Unit
 ) {
-    LaunchedEffect(Unit) {
-        viewModel.loadChats()
-    }
-
     val chatList by viewModel.chatList.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
@@ -187,13 +200,15 @@ fun ChatsScreen(
             LazyColumn {
                 items(chatList, key = { it.id }) { chat ->
                     ChatItemCard(chat = chat) {
-                        onChatClick(chat.id)
+                        onChatClick(chat.id, chat.name)
                     }
                 }
             }
         }
     }
 }
+
+
 
 @Composable
 fun PlaceholderScreen(message: String) {
