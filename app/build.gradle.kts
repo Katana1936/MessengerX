@@ -68,7 +68,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-
+    implementation(libs.firebase.storage.ktx)
     implementation(libs.androidx.navigation.compose)
     implementation (libs.coil.compose)
     implementation (libs.androidx.lifecycle.viewmodel.ktx)

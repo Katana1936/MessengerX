@@ -2,6 +2,7 @@ package com.example.messengerx.view.registration
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -11,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -27,9 +27,6 @@ class RegistrationActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var tokenDataStoreManager: TokenDataStoreManager
     private val firestore = FirebaseFirestore.getInstance()
-
-    // Объявляем isLoading для управления состоянием
-    private var isLoading by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,52 +44,51 @@ class RegistrationActivity : ComponentActivity() {
     }
 
     private fun registerUser(email: String, password: String, nickname: String) {
-        isLoading = true // Устанавливаем состояние загрузки
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val user = auth.currentUser
                     if (user != null) {
-                        val userId = user.uid
-                        val userMap = mapOf(
-                            "email" to email,
-                            "nickname" to nickname,
-                            "uid" to userId
-                        )
-
-                        // Сохраняем данные пользователя в Firestore
-                        firestore.collection("users").document(userId)
-                            .set(userMap)
-                            .addOnSuccessListener {
-                                lifecycleScope.launch {
-                                    tokenDataStoreManager.saveToken(userId) // Сохраняем токен
-                                    isLoading = false // Убираем состояние загрузки
-                                    navigateToMain() // Переходим на MainActivity
-                                }
-                            }
-                            .addOnFailureListener { e ->
-                                println("Ошибка сохранения данных пользователя: ${e.message}")
-                                isLoading = false
-                            }
+                        saveUserData(user.uid, email, nickname)
                     } else {
-                        println("Ошибка: пользователь равен null")
-                        isLoading = false
+                        showErrorMessage("Ошибка: пользователь равен null")
                     }
                 } else {
-                    println("Ошибка регистрации: ${task.exception?.message}")
-                    isLoading = false
+                    showErrorMessage(task.exception?.localizedMessage ?: "Ошибка регистрации")
                 }
             }
     }
 
+    private fun saveUserData(userId: String, email: String, nickname: String) {
+        val userMap = mapOf(
+            "email" to email,
+            "nickname" to nickname,
+            "uid" to userId
+        )
+
+        firestore.collection("users").document(userId)
+            .set(userMap)
+            .addOnSuccessListener {
+                lifecycleScope.launch {
+                    tokenDataStoreManager.saveToken(userId)
+                    navigateToMain()
+                }
+            }
+            .addOnFailureListener { e ->
+                showErrorMessage("Ошибка сохранения данных: ${e.localizedMessage}")
+            }
+    }
 
     private fun navigateToMain() {
         val intent = Intent(this, MainActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
     }
-}
 
+    private fun showErrorMessage(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+}
 
 @Composable
 fun RegistrationScreen(onRegisterSuccess: (String, String, String) -> Unit) {
@@ -150,12 +146,16 @@ fun RegistrationScreen(onRegisterSuccess: (String, String, String) -> Unit) {
             } else {
                 Button(
                     onClick = {
-                        if (email.isNotBlank() && password.isNotBlank() && nickname.isNotBlank()) {
-                            isLoading = true
-                            errorMessage = ""
-                            onRegisterSuccess(email, password, nickname)
+                        if (email.isBlank() || password.isBlank() || nickname.isBlank()) {
+                            errorMessage = "Пожалуйста, заполните все поля"
+                        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                            errorMessage = "Введите корректный Email"
+                        } else if (password.length < 6) {
+                            errorMessage = "Пароль должен быть не менее 6 символов"
                         } else {
-                            errorMessage = "Please fill out all fields"
+                            errorMessage = ""
+                            isLoading = true
+                            onRegisterSuccess(email, password, nickname)
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -172,4 +172,3 @@ fun RegistrationScreen(onRegisterSuccess: (String, String, String) -> Unit) {
         }
     }
 }
-

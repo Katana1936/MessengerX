@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
+import com.example.messengerx.PermissionsHandler
 import com.example.messengerx.api.ApiService
 import java.io.File
 
@@ -35,62 +36,82 @@ fun AddStoryScreen(
         if (!success) imageUri = null
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Добавить историю") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
-                    }
-                }
-            )
+    PermissionsHandler(
+        permissions = listOf(android.Manifest.permission.CAMERA),
+        onPermissionsGranted = {
+        },
+        onPermissionsDenied = {
         }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            if (imageUri == null) {
-                Button(onClick = {
-                    val file = File(context.getExternalFilesDir(null), "story_${System.currentTimeMillis()}.jpg")
-                    val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
-                    imageUri = uri
-                    takePictureLauncher.launch(uri)
-                }) {
-                    Text("Сделать фото")
-                }
-            } else {
-                AsyncImage(
-                    model = imageUri,
-                    contentDescription = "Предпросмотр",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(16 / 9f)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = {
-                        isUploading = true
-                        val story = ApiService.Story(
-                            id = System.currentTimeMillis().toString(),
-                            imageUrl = imageUri.toString(),
-                            timestamp = System.currentTimeMillis(),
-                            userId = userId
-                        )
-                        viewModel.addStory(userId, story) {
-                            isUploading = false
-                            onStoryPublished()
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Добавить историю") },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
                         }
-                    },
-                    enabled = !isUploading
-                ) {
-                    Text("Опубликовать")
+                    }
+                )
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                if (imageUri == null) {
+                    Button(onClick = {
+                        val file = File(context.getExternalFilesDir(null), "story_${System.currentTimeMillis()}.jpg")
+                        val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+                        imageUri = uri
+                        takePictureLauncher.launch(uri)
+                    }) {
+                        Text("Сделать фото")
+                    }
+                } else {
+                    AsyncImage(
+                        model = imageUri,
+                        contentDescription = "Предпросмотр",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(16 / 9f)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = {
+                            isUploading = true
+                            viewModel.uploadStoryImage(
+                                userId = userId,
+                                imageUri = imageUri!!,
+                                onSuccess = { imageUrl ->
+                                    val story = ApiService.Story(
+                                        id = System.currentTimeMillis().toString(),
+                                        imageUrl = imageUrl,
+                                        timestamp = System.currentTimeMillis(),
+                                        userId = userId
+                                    )
+                                    viewModel.addStory(userId, story) {
+                                        isUploading = false
+                                        onStoryPublished()
+                                    }
+                                },
+                                onFailure = { errorMessage ->
+                                    println(errorMessage)
+                                    isUploading = false
+                                }
+                            )
+                        },
+                        enabled = !isUploading
+                    ) {
+                        Text("Опубликовать")
+                    }
                 }
             }
         }
     }
 }
+
+

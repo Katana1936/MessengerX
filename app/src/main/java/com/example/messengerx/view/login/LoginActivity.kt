@@ -24,7 +24,6 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-
 class LoginActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var tokenDataStoreManager: TokenDataStoreManager
@@ -35,11 +34,10 @@ class LoginActivity : ComponentActivity() {
         auth = FirebaseAuth.getInstance()
         tokenDataStoreManager = TokenDataStoreManager(this)
 
-        lifecycleScope.launch {
-            val token = tokenDataStoreManager.token.first()
-            if (!token.isNullOrEmpty()) {
-                navigateToMain()
-            }
+        // Проверяем, авторизован ли пользователь
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            navigateToMain() // Если пользователь уже вошел, переходим в MainActivity
         }
 
         setContent {
@@ -72,7 +70,6 @@ class LoginActivity : ComponentActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
     }
-
 
     private fun navigateToRegistration() {
         startActivity(Intent(this, RegistrationActivity::class.java))
@@ -157,4 +154,3 @@ fun LoginScreen(onLogin: (String, String) -> Unit, onRegisterClick: () -> Unit) 
         }
     }
 }
-

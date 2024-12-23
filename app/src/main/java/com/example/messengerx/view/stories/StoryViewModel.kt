@@ -1,7 +1,9 @@
 package com.example.messengerx.view.stories
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import com.example.messengerx.api.ApiService
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import retrofit2.Call
@@ -17,7 +19,7 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
         apiService.getUserStories(userId).enqueue(object : Callback<Map<String, ApiService.Story>> {
             override fun onResponse(call: Call<Map<String, ApiService.Story>>, response: Response<Map<String, ApiService.Story>>) {
                 if (response.isSuccessful) {
-                    val storyList = response.body()?.values?.filter { it.userId == userId } ?: emptyList()
+                    val storyList = response.body()?.values?.toList() ?: emptyList()
                     _stories.value = storyList
                 } else {
                     println("Ошибка получения историй: ${response.errorBody()?.string()}")
@@ -30,6 +32,27 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
         })
     }
 
+    fun uploadStoryImage(
+        userId: String,
+        imageUri: Uri,
+        onSuccess: (String) -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        val storageRef = FirebaseStorage.getInstance().reference
+        val storyRef = storageRef.child("stories/$userId/${System.currentTimeMillis()}.jpg")
+
+        storyRef.putFile(imageUri)
+            .addOnSuccessListener {
+                storyRef.downloadUrl.addOnSuccessListener { uri ->
+                    onSuccess(uri.toString())
+                }.addOnFailureListener { e ->
+                    onFailure("Ошибка получения URL: ${e.message}")
+                }
+            }
+            .addOnFailureListener { e ->
+                onFailure("Ошибка загрузки файла: ${e.message}")
+            }
+    }
 
     fun addStory(userId: String, story: ApiService.Story, onComplete: () -> Unit) {
         apiService.addStory(userId, story).enqueue(object : Callback<Void> {
@@ -47,5 +70,3 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
         })
     }
 }
-
-

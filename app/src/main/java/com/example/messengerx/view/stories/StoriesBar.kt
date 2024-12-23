@@ -20,46 +20,22 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import com.example.messengerx.api.ApiService
+import com.example.messengerx.view.stories.StoryViewModel
 import kotlinx.coroutines.launch
 import java.io.File
 
 @Composable
 fun StoriesBar(
-    storyDataStore: StoryDataStore,
+    viewModel: StoryViewModel,
     userId: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAddStoryClick: () -> Unit
 ) {
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
     var selectedStoryUrl by remember { mutableStateOf<String?>(null) }
-    val stories = remember { mutableStateListOf<ApiService.Story>() }
+    val stories by viewModel.stories.collectAsState()
 
-    // Загрузка историй из DataStore
     LaunchedEffect(Unit) {
-        storyDataStore.stories.collect { loadedStories ->
-            stories.clear()
-            stories.addAll(loadedStories)
-        }
-    }
-
-    val takePictureLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture()
-    ) { success ->
-        if (success && imageUri != null) {
-            val newStory = ApiService.Story(
-                id = System.currentTimeMillis().toString(),
-                imageUrl = imageUri.toString(),
-                timestamp = System.currentTimeMillis(),
-                userId = userId
-            )
-            coroutineScope.launch {
-                stories.add(newStory) // Добавляем в локальный список
-                storyDataStore.saveStories(stories) // Сохраняем в DataStore
-                imageUri = null
-            }
-        }
+        viewModel.fetchStories(userId)
     }
 
     Box(
@@ -77,14 +53,7 @@ fun StoriesBar(
                         .clip(RoundedCornerShape(16.dp))
                         .background(Color.Gray.copy(alpha = 0.8f))
                         .clickable {
-                            val file = File(context.getExternalFilesDir(null), "story_${System.currentTimeMillis()}.jpg")
-                            val uri = FileProvider.getUriForFile(
-                                context,
-                                "${context.packageName}.provider",
-                                file
-                            )
-                            imageUri = uri
-                            takePictureLauncher.launch(uri)
+                            onAddStoryClick() // Открытие экрана добавления истории
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -111,7 +80,6 @@ fun StoriesBar(
         }
     }
 
-    // Полноэкранное отображение истории
     selectedStoryUrl?.let { imageUrl ->
         FullScreenImageDialog(
             imageUrl = imageUrl,

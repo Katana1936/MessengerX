@@ -2,7 +2,6 @@ package com.example.messengerx.view
 
 import ChatViewModel
 import StoriesBar
-import StoryDataStore
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -23,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -33,7 +30,6 @@ import androidx.navigation.navArgument
 import com.example.messengerx.BottomNavigationBar
 import com.example.messengerx.api.ApiService
 import com.example.messengerx.api.RetrofitClient
-import com.example.messengerx.api.TokenDataStoreManager
 import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.chat.ChatItemCard
 import com.example.messengerx.view.chat.ChatScreen
@@ -41,24 +37,18 @@ import com.example.messengerx.view.contact.ContactsScreen
 import com.example.messengerx.view.contact.ContactsViewModel
 import com.example.messengerx.view.contact.ContactsViewModelFactory
 import com.example.messengerx.view.login.LoginActivity
+import com.example.messengerx.view.stories.StoryViewModel
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
 
 class MainActivity : ComponentActivity() {
     private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
-    private val databaseReference by lazy { FirebaseDatabase.getInstance().getReference("users") }
-    private lateinit var tokenDataStoreManager: TokenDataStoreManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        tokenDataStoreManager = TokenDataStoreManager(this)
 
         val currentUser = auth.currentUser
         if (currentUser != null) {
-            checkUserInDatabase(currentUser.uid,
-                onSuccess = { setupMainScreen() },
-                onFailure = { navigateToLogin() }
-            )
+            setupMainScreen()
         } else {
             navigateToLogin()
         }
@@ -67,12 +57,9 @@ class MainActivity : ComponentActivity() {
     private fun setupMainScreen() {
         setContent {
             val apiService = RetrofitClient.getInstance()
-            val storyDataStore = StoryDataStore(this)
+
             ThemeMessengerX {
-                MainScreen(
-                    apiService = apiService,
-                    storyDataStore = storyDataStore
-                )
+                MainScreen(apiService)
             }
         }
     }
@@ -82,20 +69,10 @@ class MainActivity : ComponentActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
     }
-
-    private fun checkUserInDatabase(userId: String, onSuccess: () -> Unit, onFailure: () -> Unit) {
-        databaseReference.child(userId).get().addOnCompleteListener { task ->
-            if (task.isSuccessful && task.result.exists()) {
-                onSuccess()
-            } else {
-                onFailure()
-            }
-        }
-    }
 }
 
 @Composable
-fun MainScreen(apiService: ApiService, storyDataStore: StoryDataStore) {
+fun MainScreen(apiService: ApiService) {
     val navController = rememberNavController()
 
     Scaffold(
@@ -111,18 +88,15 @@ fun MainScreen(apiService: ApiService, storyDataStore: StoryDataStore) {
         NavigationHost(
             navController = navController,
             apiService = apiService,
-            storyDataStore = storyDataStore,
             modifier = Modifier.padding(innerPadding)
         )
     }
 }
 
-
 @Composable
 fun NavigationHost(
     navController: NavHostController,
     apiService: ApiService,
-    storyDataStore: StoryDataStore,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -132,13 +106,17 @@ fun NavigationHost(
     ) {
         composable("chats") {
             val chatViewModel = remember { ChatViewModel(apiService) }
+            val storyViewModel = remember { StoryViewModel(apiService) }
             ChatsScreen(
-                viewModel = chatViewModel,
-                storyDataStore = storyDataStore,
+                chatViewModel = chatViewModel,
+                storyViewModel = storyViewModel,
                 userId = "user1",
                 apiService = apiService,
                 onChatClick = { chatId, chatName ->
                     navController.navigate("chat/$chatId/${chatName}")
+                },
+                onAddStoryClick = {
+                    navController.navigate("add_story")
                 }
             )
         }
@@ -172,26 +150,30 @@ fun NavigationHost(
     }
 }
 
-
-
-
 @Composable
 fun ChatsScreen(
-    viewModel: ChatViewModel = viewModel(),
-    storyDataStore: StoryDataStore,
+    chatViewModel: ChatViewModel,
+    storyViewModel: StoryViewModel,
     userId: String,
     apiService: ApiService,
     onChatClick: (String, String) -> Unit
 ) {
-    val chatList by viewModel.chatList.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
+    val chatList by chatViewModel.chatList.collectAsState()
+    val errorMessage by chatViewModel.errorMessage.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.loadChats()
+        chatViewModel.loadChats()
     }
 
     Scaffold { padding ->
         Column(modifier = Modifier.padding(padding)) {
+            StoriesBar(
+                viewModel = storyViewModel,
+                userId = userId,
+                onAddStoryClick = onAddStoryClick,
+                modifier = Modifier.padding(8.dp)
+            )
+
             Text(
                 text = "Chats",
                 style = MaterialTheme.typography.headlineMedium,
@@ -221,10 +203,6 @@ fun ChatsScreen(
         }
     }
 }
-
-
-
-
 
 @Composable
 fun PlaceholderScreen(message: String) {
