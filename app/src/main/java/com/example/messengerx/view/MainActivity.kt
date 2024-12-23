@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -129,11 +131,12 @@ fun NavigationHost(
         modifier = modifier
     ) {
         composable("chats") {
-            val chatViewModel = remember { ChatViewModel(apiService) } // Инициализация ChatViewModel
+            val chatViewModel = remember { ChatViewModel(apiService) }
             ChatsScreen(
                 viewModel = chatViewModel,
                 storyDataStore = storyDataStore,
                 userId = "user1",
+                apiService = apiService,
                 onChatClick = { chatId, chatName ->
                     navController.navigate("chat/$chatId/${chatName}")
                 }
@@ -177,16 +180,24 @@ fun ChatsScreen(
     viewModel: ChatViewModel = viewModel(),
     storyDataStore: StoryDataStore,
     userId: String,
+    apiService: ApiService,
     onChatClick: (String, String) -> Unit
 ) {
     val chatList by viewModel.chatList.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.loadChats()
+    }
+
     Scaffold { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            StoriesBar(
-                storyDataStore = storyDataStore,
-                userId = userId
+            Text(
+                text = "Chats",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier
+                    .padding(start = 16.dp, top = 16.dp, bottom = 8.dp),
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             if (!errorMessage.isNullOrEmpty()) {
@@ -199,7 +210,10 @@ fun ChatsScreen(
 
             LazyColumn {
                 items(chatList, key = { it.id }) { chat ->
-                    ChatItemCard(chat = chat) {
+                    ChatItemCard(
+                        chat = chat,
+                        apiService = apiService
+                    ) {
                         onChatClick(chat.id, chat.name)
                     }
                 }
@@ -207,6 +221,8 @@ fun ChatsScreen(
         }
     }
 }
+
+
 
 
 

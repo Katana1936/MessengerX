@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -39,7 +40,8 @@ fun ChatScreen(chatId: String, chatName: String, apiService: ApiService) {
     val viewModel: ChatViewModel = viewModel(factory = ChatViewModelFactory(apiService))
     var messageText by remember { mutableStateOf("") }
 
-    // Load messages when the screen is launched
+    val messages by viewModel.messages.collectAsState()
+
     LaunchedEffect(Unit) {
         viewModel.loadMessages(chatId)
     }
@@ -61,14 +63,12 @@ fun ChatScreen(chatId: String, chatName: String, apiService: ApiService) {
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Display chat messages
             LazyColumn(modifier = Modifier.weight(1f)) {
-                items(viewModel.messages) { message ->
+                items(messages) { message ->
                     MessageItem(message)
                 }
             }
 
-            // Input field for sending messages
             UserInput(
                 messageText = messageText,
                 onMessageTextChange = { messageText = it },
@@ -82,6 +82,8 @@ fun ChatScreen(chatId: String, chatName: String, apiService: ApiService) {
         }
     }
 }
+
+
 
 @Composable
 fun UserInput(

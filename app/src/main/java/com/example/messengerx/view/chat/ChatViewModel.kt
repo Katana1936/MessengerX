@@ -7,12 +7,39 @@ import kotlinx.coroutines.launch
 
 class ChatViewModel(private val apiService: ApiService) : ViewModel() {
 
+    // Для сообщений
     private val _messages = MutableStateFlow<List<ApiService.MessageResponse>>(emptyList())
     val messages: StateFlow<List<ApiService.MessageResponse>> = _messages
+
+    private val _chatList = MutableStateFlow<List<ApiService.ChatItem>>(emptyList())
+    val chatList: StateFlow<List<ApiService.ChatItem>> = _chatList
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
+    // Загрузка списка чатов
+    fun loadChats() {
+        viewModelScope.launch {
+            try {
+                val response = apiService.getChats().execute()
+                if (response.isSuccessful) {
+                    val chatItems = response.body()?.map { (id, chatResponse) ->
+                        ApiService.ChatItem(
+                            id = id,
+                            name = chatResponse.name ?: "Без имени"
+                        )
+                    } ?: emptyList()
+                    _chatList.value = chatItems
+                } else {
+                    _errorMessage.value = "Ошибка загрузки чатов: ${response.message()}"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Ошибка подключения: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    // Загрузка сообщений
     fun loadMessages(chatId: String) {
         viewModelScope.launch {
             try {
@@ -28,6 +55,7 @@ class ChatViewModel(private val apiService: ApiService) : ViewModel() {
         }
     }
 
+    // Отправка сообщения
     fun sendMessage(chatId: String, senderId: String, message: String) {
         viewModelScope.launch {
             try {
