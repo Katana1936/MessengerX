@@ -34,10 +34,9 @@ class LoginActivity : ComponentActivity() {
         auth = FirebaseAuth.getInstance()
         tokenDataStoreManager = TokenDataStoreManager(this)
 
-        // Проверяем, авторизован ли пользователь
         val currentUser = auth.currentUser
         if (currentUser != null) {
-            navigateToMain() // Если пользователь уже вошел, переходим в MainActivity
+            navigateToMain()
         }
 
         setContent {
@@ -54,16 +53,18 @@ class LoginActivity : ComponentActivity() {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+                    navigateToMain()
+
                     val token = auth.currentUser?.uid ?: ""
                     lifecycleScope.launch {
                         tokenDataStoreManager.saveToken(token)
-                        navigateToMain()
                     }
                 } else {
                     println("Ошибка входа: ${task.exception?.message}")
                 }
             }
     }
+
 
     private fun navigateToMain() {
         val intent = Intent(this, MainActivity::class.java)

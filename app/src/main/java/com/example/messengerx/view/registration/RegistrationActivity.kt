@@ -49,6 +49,8 @@ class RegistrationActivity : ComponentActivity() {
                 if (task.isSuccessful) {
                     val user = auth.currentUser
                     if (user != null) {
+                        navigateToMain()
+
                         saveUserData(user.uid, email, nickname)
                     } else {
                         showErrorMessage("Ошибка: пользователь равен null")

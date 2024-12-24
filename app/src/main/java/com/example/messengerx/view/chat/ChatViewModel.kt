@@ -50,13 +50,15 @@ class ChatViewModel(private val apiService: ApiService) : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = apiService.getMessages(chatId)
-                val sortedMessages = response.values.sortedBy { it.timestamp }
+
+                val sortedMessages = response.sortedBy { it.timestamp }
                 _messages.value = sortedMessages
             } catch (e: Exception) {
                 _errorMessage.value = "Ошибка: ${e.localizedMessage}"
             }
         }
     }
+
 
     fun sendMessage(chatId: String, senderId: String, message: String) {
         viewModelScope.launch {

@@ -29,19 +29,31 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.login.LoginActivity
+import com.google.firebase.auth.FirebaseAuth
 
 class WelcomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        setContent {
-            ThemeMessengerX {
-                WelcomeScreen(
-                    onGetStartedClick = { navigateToLogin() }
-                )
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            navigateToMain()
+        } else {
+            setContent {
+                ThemeMessengerX {
+                    WelcomeScreen(
+                        onGetStartedClick = { navigateToLogin() }
+                    )
+                }
             }
         }
+    }
+
+    private fun navigateToMain() {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
     }
 
     private fun navigateToLogin() {
@@ -49,6 +61,7 @@ class WelcomeActivity : ComponentActivity() {
         startActivity(intent)
     }
 }
+
 
 @Composable
 fun WelcomeScreen(onGetStartedClick: () -> Unit) {

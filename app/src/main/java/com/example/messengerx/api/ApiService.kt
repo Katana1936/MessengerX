@@ -1,7 +1,5 @@
 package com.example.messengerx.api
 
-import com.example.messengerx.view.contact.ContactRequest
-import com.example.messengerx.view.contact.ContactResponse
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -12,6 +10,7 @@ import retrofit2.http.Path
 
 interface ApiService {
 
+    // Contacts API
     @Headers("Accept: application/json")
     @GET("contacts.json")
     suspend fun getContacts(): Map<String, ContactResponse>
@@ -31,23 +30,24 @@ interface ApiService {
     @DELETE("contacts/{id}.json")
     suspend fun deleteContact(@Path("id") id: String): Map<String, String>
 
+    // Chats API
     @Headers("Accept: application/json")
-    @GET("chats.json")
-    suspend fun getChats(): Map<String, ChatResponse>?
-
-
-    @Headers("Accept: application/json")
-    @POST("chats.json")
-    suspend fun createChat(@Body request: ChatRequest): Map<String, String>
+    @GET("chats")
+    suspend fun getChats(): FirestoreResponse<ChatResponse>
 
     @Headers("Accept: application/json")
-    @GET("chats/{chatId}/messages.json")
-    suspend fun getMessages(@Path("chatId") chatId: String): Map<String, MessageResponse>
+    @POST("chats")
+    suspend fun createChat(@Body request: ChatRequest): FirestoreDocumentResponse
 
     @Headers("Accept: application/json")
-    @POST("chats/{chatId}/messages.json")
+    @GET("chats/{chatId}/messages")
+    suspend fun getMessages(@Path("chatId") chatId: String): FirestoreResponse<MessageResponse>
+
+    @Headers("Accept: application/json")
+    @POST("chats/{chatId}/messages")
     suspend fun sendMessage(@Path("chatId") chatId: String, @Body message: MessageRequest)
 
+    // Stories API
     @Headers("Accept: application/json")
     @GET("stories/{userId}/userStories.json")
     suspend fun getUserStories(@Path("userId") userId: String): Map<String, Story>
@@ -59,6 +59,7 @@ interface ApiService {
     @GET("stories.json")
     suspend fun getAllStories(): Map<String, Story>
 
+    // Data Classes
     data class Story(
         val id: String,
         val imageUrl: String,
@@ -78,23 +79,37 @@ interface ApiService {
     )
 
     data class ChatResponse(
-        val isOnline: Boolean = false,
-        val lastSeen: String = "",
-        val participants: List<String> = emptyList(),
-        val name: String = "",
-        val timestamp: Long = 0L,
-        val lastMessage: String = ""
+        val name: FieldValue,
+        val timestamp: FieldValue,
+        val participants: List<FieldValue> = emptyList()
     )
 
     data class MessageRequest(
-        val senderId: String,
-        val message: String,
-        val timestamp: Long
+        val fields: Map<String, FieldValue>
     )
 
     data class MessageResponse(
-        val senderId: String,
-        val message: String,
-        val timestamp: Long
+        val senderId: FieldValue,
+        val message: FieldValue,
+        val timestamp: FieldValue
+    )
+
+    // Firestore-specific data classes
+    data class FirestoreResponse<T>(
+        val documents: List<Document<T>>
+    )
+
+    data class FirestoreDocumentResponse(
+        val name: String
+    )
+
+    data class Document<T>(
+        val name: String,
+        val fields: T
+    )
+
+    data class FieldValue(
+        val stringValue: String? = null,
+        val integerValue: String? = null
     )
 }

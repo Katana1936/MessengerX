@@ -7,7 +7,9 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    private const val BASE_URL = "https://messengerx-df3ea-default-rtdb.europe-west1.firebasedatabase.app/"
+    private const val BASE_URL =
+        "https://firestore.googleapis.com/v1/projects/messengerx-df3ea/databases/(default)/documents/"
+
     private lateinit var retrofit: Retrofit
 
     fun getInstance(token: String? = null): ApiService {

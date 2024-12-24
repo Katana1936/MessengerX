@@ -23,7 +23,8 @@ fun ChatItemCard(
 
     LaunchedEffect(chat.id) {
         try {
-            val messages = apiService.getMessages(chat.id).values.sortedByDescending { it.timestamp }
+            val messages = apiService.getMessages(chat.id).sortedByDescending { it.timestamp }
+
             if (messages.isNotEmpty()) {
                 val message = messages.first()
                 lastMessage = message.message
@@ -37,6 +38,7 @@ fun ChatItemCard(
             lastMessageTime = "N/A"
         }
     }
+
 
 
     Card(
