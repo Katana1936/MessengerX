@@ -33,7 +33,8 @@ interface ApiService {
 
     @Headers("Accept: application/json")
     @GET("chats.json")
-    suspend fun getChats(): Map<String, ChatResponse>
+    suspend fun getChats(): Map<String, ChatResponse>?
+
 
     @Headers("Accept: application/json")
     @POST("chats.json")

@@ -22,6 +22,13 @@ class ChatViewModel(private val apiService: ApiService) : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = apiService.getChats()
+                println("Ответ сервера: $response")
+
+                if (response.isNullOrEmpty()) {
+                    _errorMessage.value = "Список чатов пуст или сервер вернул пустой ответ"
+                    return@launch
+                }
+
                 val chatItems = response.map { (id, chatResponse) ->
                     ApiService.ChatItem(
                         id = id,
@@ -34,6 +41,10 @@ class ChatViewModel(private val apiService: ApiService) : ViewModel() {
             }
         }
     }
+
+
+
+
 
     fun loadMessages(chatId: String) {
         viewModelScope.launch {

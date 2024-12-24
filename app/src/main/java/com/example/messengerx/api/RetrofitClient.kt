@@ -1,8 +1,5 @@
 package com.example.messengerx.api
 
-import android.content.Context
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -41,5 +38,3 @@ object RetrofitClient {
         return retrofit.create(ApiService::class.java)
     }
 }
-
-

@@ -19,20 +19,14 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
     fun fetchStories(userId: String) {
         viewModelScope.launch {
             try {
-                val response = apiService.getUserStories(userId)
-                if (response.isSuccessful) {
-                    val storyList = response.body()?.values?.toList() ?: emptyList()
-                    _stories.value = storyList
-                } else {
-                    println("Ошибка получения историй: ${response.errorBody()?.string()}")
-                }
+                val storyList = apiService.getUserStories(userId).values.toList()
+                _stories.value = storyList
             } catch (e: Exception) {
-                println("Ошибка сети: ${e.message}")
+                println("Ошибка получения историй: ${e.localizedMessage}")
             }
         }
     }
 
-    // Метод для загрузки изображения истории в Firebase
     fun uploadStoryImage(
         userId: String,
         imageUri: Uri,
@@ -55,17 +49,11 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
             }
     }
 
-    // Метод для добавления истории
     fun addStory(userId: String, story: ApiService.Story, onComplete: (Boolean) -> Unit) {
         viewModelScope.launch {
             try {
-                val response = apiService.addStory(userId, story)
-                if (response.isSuccessful) {
-                    onComplete(true)
-                } else {
-                    println("Ошибка добавления истории: ${response.errorBody()?.string()}")
-                    onComplete(false)
-                }
+                apiService.addStory(userId, story)
+                onComplete(true)
             } catch (e: Exception) {
                 println("Ошибка добавления истории: ${e.localizedMessage}")
                 onComplete(false)
