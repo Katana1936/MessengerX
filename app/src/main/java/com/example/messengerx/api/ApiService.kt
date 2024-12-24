@@ -2,7 +2,6 @@ package com.example.messengerx.api
 
 import com.example.messengerx.view.contact.ContactRequest
 import com.example.messengerx.view.contact.ContactResponse
-import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -15,48 +14,49 @@ interface ApiService {
 
     @Headers("Accept: application/json")
     @GET("contacts.json")
-    fun getContacts(): Call<Map<String, ContactResponse>>
+    suspend fun getContacts(): Map<String, ContactResponse>
 
     @Headers("Accept: application/json")
     @POST("contacts.json")
-    fun addContact(@Body request: ContactRequest): Call<Map<String, String>>
+    suspend fun addContact(@Body request: ContactRequest): Map<String, String>
 
     @Headers("Accept: application/json")
     @PUT("contacts/{id}.json")
-    fun updateContact(
+    suspend fun updateContact(
         @Path("id") id: String,
         @Body request: ContactRequest
-    ): Call<Map<String, String>>
+    ): Map<String, String>
 
     @Headers("Accept: application/json")
     @DELETE("contacts/{id}.json")
-    fun deleteContact(@Path("id") id: String): Call<Map<String, String>>
+    suspend fun deleteContact(@Path("id") id: String): Map<String, String>
 
     @Headers("Accept: application/json")
     @GET("chats.json")
-    fun getChats(): Call<Map<String, ChatResponse>>
+    suspend fun getChats(): Map<String, ChatResponse>
 
     @Headers("Accept: application/json")
     @POST("chats.json")
-    fun createChat(@Body request: ChatRequest): Call<Map<String, String>>
+    suspend fun createChat(@Body request: ChatRequest): Map<String, String>
 
     @Headers("Accept: application/json")
     @GET("chats/{chatId}/messages.json")
-    fun getMessages(@Path("chatId") chatId: String): Call<Map<String, MessageResponse>>
+    suspend fun getMessages(@Path("chatId") chatId: String): Map<String, MessageResponse>
 
     @Headers("Accept: application/json")
     @POST("chats/{chatId}/messages.json")
-    fun sendMessage(@Path("chatId") chatId: String, @Body message: MessageRequest): Call<Void>
+    suspend fun sendMessage(@Path("chatId") chatId: String, @Body message: MessageRequest)
 
     @Headers("Accept: application/json")
     @GET("stories/{userId}/userStories.json")
-    fun getUserStories(@Path("userId") userId: String): Call<Map<String, Story>>
+    suspend fun getUserStories(@Path("userId") userId: String): Map<String, Story>
 
     @Headers("Accept: application/json")
     @POST("stories/{userId}/userStories.json")
-    fun addStory(@Path("userId") userId: String, @Body story: Story): Call<Void>
+    suspend fun addStory(@Path("userId") userId: String, @Body story: Story)
+
     @GET("stories.json")
-    fun getAllStories(): Call<Map<String, Story>>
+    suspend fun getAllStories(): Map<String, Story>
 
     data class Story(
         val id: String,
@@ -65,13 +65,10 @@ interface ApiService {
         val userId: String
     )
 
-
     data class ChatItem(
         val id: String,
         val name: String
     )
-
-
 
     data class ChatRequest(
         val participants: List<String>,
@@ -88,8 +85,6 @@ interface ApiService {
         val lastMessage: String = ""
     )
 
-
-
     data class MessageRequest(
         val senderId: String,
         val message: String,
@@ -101,6 +96,4 @@ interface ApiService {
         val message: String,
         val timestamp: Long
     )
-
 }
-

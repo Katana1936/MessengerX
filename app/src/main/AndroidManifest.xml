@@ -28,15 +28,16 @@
         <!-- FileProvider для доступа к камере -->
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.provider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
-        </provider>
+            android:authorities="com.example.messengerx.provider"
+        android:exported="false"
+        android:grantUriPermissions="true">
+        <meta-data
+            android:name="android.support.FILE_PROVIDER_PATHS"
+            android:resource="@xml/file_paths" />
+    </provider>
 
-        <!-- WelcomeActivity -->
+
+    <!-- WelcomeActivity -->
         <activity
             android:name=".view.WelcomeActivity"
             android:exported="true"

@@ -2,26 +2,24 @@ package com.example.messengerx.view.stories
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.messengerx.api.ApiService
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class StoryViewModel(private val apiService: ApiService) : ViewModel() {
 
+    // StateFlow для хранения списка историй
     private val _stories = MutableStateFlow<List<ApiService.Story>>(emptyList())
     val stories: StateFlow<List<ApiService.Story>> = _stories
 
+    // Метод для получения списка историй пользователя
     fun fetchStories(userId: String) {
-        CoroutineScope(Dispatchers.IO).launch {
+        viewModelScope.launch {
             try {
-                val response = apiService.getUserStories(userId).execute()
+                val response = apiService.getUserStories(userId)
                 if (response.isSuccessful) {
                     val storyList = response.body()?.values?.toList() ?: emptyList()
                     _stories.value = storyList
@@ -34,7 +32,7 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
         }
     }
 
-
+    // Метод для загрузки изображения истории в Firebase
     fun uploadStoryImage(
         userId: String,
         imageUri: Uri,
@@ -57,19 +55,21 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
             }
     }
 
-    fun addStory(userId: String, story: ApiService.Story, onComplete: () -> Unit) {
-        apiService.addStory(userId, story).enqueue(object : Callback<Void> {
-            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+    // Метод для добавления истории
+    fun addStory(userId: String, story: ApiService.Story, onComplete: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = apiService.addStory(userId, story)
                 if (response.isSuccessful) {
-                    onComplete()
+                    onComplete(true)
                 } else {
                     println("Ошибка добавления истории: ${response.errorBody()?.string()}")
+                    onComplete(false)
                 }
+            } catch (e: Exception) {
+                println("Ошибка добавления истории: ${e.localizedMessage}")
+                onComplete(false)
             }
-
-            override fun onFailure(call: Call<Void>, t: Throwable) {
-                println("Ошибка сети: ${t.message}")
-            }
-        })
+        }
     }
 }

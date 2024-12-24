@@ -1,6 +1,6 @@
 package com.example.messengerx.view.chat
 
-import ChatViewModel
+import com.example.messengerx.view.chat.ChatViewModel
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent

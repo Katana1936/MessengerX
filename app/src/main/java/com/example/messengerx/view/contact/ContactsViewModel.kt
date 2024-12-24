@@ -31,18 +31,17 @@ class ContactsViewModel(private val apiService: ApiService) : ViewModel() {
     fun loadContacts() {
         viewModelScope.launch {
             try {
-                val response = apiService.getContacts().awaitResponse()
-                if (response.isSuccessful) {
-                    val contactsList = response.body()?.map { (id, contact) ->
-                        ContactResponse(id, contact.name, contact.phone)
-                    } ?: emptyList()
-                    _contacts.value = contactsList
+                val response = apiService.getContacts()
+                val contactsList = response.map { (id, contact) ->
+                    ContactResponse(id, contact.name, contact.phone)
                 }
+                _contacts.value = contactsList
             } catch (e: Exception) {
                 println("Ошибка загрузки контактов: ${e.localizedMessage}")
             }
         }
     }
+
 }
 
 data class ContactRequest(

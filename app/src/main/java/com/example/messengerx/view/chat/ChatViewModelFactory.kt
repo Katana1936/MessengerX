@@ -1,6 +1,6 @@
 package com.example.messengerx.view.chat
 
-import ChatViewModel
+import com.example.messengerx.view.chat.ChatViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.messengerx.api.ApiService

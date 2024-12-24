@@ -23,23 +23,21 @@ fun ChatItemCard(
 
     LaunchedEffect(chat.id) {
         try {
-            val response = apiService.getMessages(chat.id).execute()
-            if (response.isSuccessful) {
-                val messages = response.body()?.values?.sortedByDescending { it.timestamp }
-                if (!messages.isNullOrEmpty()) {
-                    val message = messages.first()
-                    lastMessage = message.message
-                    lastMessageTime = formatTimeAgo(message.timestamp)
-                } else {
-                    lastMessage = "No messages yet"
-                    lastMessageTime = "N/A"
-                }
+            val messages = apiService.getMessages(chat.id).values.sortedByDescending { it.timestamp }
+            if (messages.isNotEmpty()) {
+                val message = messages.first()
+                lastMessage = message.message
+                lastMessageTime = formatTimeAgo(message.timestamp)
+            } else {
+                lastMessage = "No messages yet"
+                lastMessageTime = "N/A"
             }
         } catch (e: Exception) {
             lastMessage = "Error loading messages"
             lastMessageTime = "N/A"
         }
     }
+
 
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),

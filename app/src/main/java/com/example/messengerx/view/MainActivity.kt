@@ -1,6 +1,5 @@
 package com.example.messengerx.view
 
-import ChatViewModel
 import StoriesBar
 import android.content.Intent
 import android.os.Bundle
@@ -33,6 +32,7 @@ import com.example.messengerx.api.RetrofitClient
 import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.chat.ChatItemCard
 import com.example.messengerx.view.chat.ChatScreen
+import com.example.messengerx.view.chat.ChatViewModel
 import com.example.messengerx.view.contact.ContactsScreen
 import com.example.messengerx.view.contact.ContactsViewModel
 import com.example.messengerx.view.contact.ContactsViewModelFactory
@@ -213,7 +213,7 @@ fun ChatsScreen(
             }
 
             LazyColumn {
-                items(chatList, key = { it.id }) { chat ->
+                items(chatList) { chat ->
                     ChatItemCard(
                         chat = chat,
                         apiService = apiService
@@ -222,6 +222,7 @@ fun ChatsScreen(
                     }
                 }
             }
+
         }
     }
 }
