@@ -10,7 +10,6 @@ import retrofit2.http.Path
 
 interface ApiService {
 
-    // Contacts API
     @Headers("Accept: application/json")
     @GET("contacts.json")
     suspend fun getContacts(): Map<String, ContactResponse>
@@ -30,7 +29,6 @@ interface ApiService {
     @DELETE("contacts/{id}.json")
     suspend fun deleteContact(@Path("id") id: String): Map<String, String>
 
-    // Chats API
     @Headers("Accept: application/json")
     @GET("chats")
     suspend fun getChats(): FirestoreResponse<ChatResponse>
@@ -47,7 +45,6 @@ interface ApiService {
     @POST("chats/{chatId}/messages")
     suspend fun sendMessage(@Path("chatId") chatId: String, @Body message: MessageRequest)
 
-    // Stories API
     @Headers("Accept: application/json")
     @GET("stories/{userId}/userStories.json")
     suspend fun getUserStories(@Path("userId") userId: String): Map<String, Story>
