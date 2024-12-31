@@ -1,7 +1,11 @@
 package com.example.messengerx.view.login
 
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -21,6 +25,7 @@ import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.MainActivity
 import com.example.messengerx.view.registration.RegistrationActivity
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -50,19 +55,71 @@ class LoginActivity : ComponentActivity() {
     }
 
     private fun loginUser(email: String, password: String) {
+        if (!isNetworkAvailable()) {
+            showToast("Нет подключения к интернету")
+            return
+        }
+
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    navigateToMain()
-
-                    val token = auth.currentUser?.uid ?: ""
-                    lifecycleScope.launch {
-                        tokenDataStoreManager.saveToken(token)
+                    val currentUser = auth.currentUser
+                    if (currentUser != null) {
+                        FirebaseFirestore.getInstance()
+                            .collection("users")
+                            .document(currentUser.uid)
+                            .get()
+                            .addOnSuccessListener { document ->
+                                if (document.exists()) {
+                                    saveFirebaseToken()
+                                    navigateToMain()
+                                } else {
+                                    showToast("Пользователь не найден в базе.")
+                                }
+                            }
                     }
                 } else {
-                    println("Ошибка входа: ${task.exception?.message}")
+                    showToast(task.exception?.localizedMessage ?: "Ошибка входа")
                 }
             }
+
+
+
+
+
+    auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
+                    if (user != null) {
+                        FirebaseFirestore.getInstance()
+                            .collection("users")
+                            .document(user.uid)
+                            .get()
+                            .addOnSuccessListener { document ->
+                                if (document.exists()) {
+                                    navigateToMain()
+                                } else {
+                                    showToast("Пользователь не найден в системе.")
+                                }
+                            }
+                    }
+                } else {
+                    showToast(task.exception?.localizedMessage ?: "Ошибка входа")
+                }
+            }
+    }
+
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return activeNetwork.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
 

@@ -30,25 +30,38 @@ import androidx.compose.ui.unit.dp
 import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.login.LoginActivity
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class WelcomeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
 
-        val currentUser = FirebaseAuth.getInstance().currentUser
+        val auth = FirebaseAuth.getInstance()
+        val currentUser = auth.currentUser
+
         if (currentUser != null) {
-            navigateToMain()
+            // Проверяем, есть ли данные пользователя в Firestore
+            FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(currentUser.uid)
+                .get()
+                .addOnSuccessListener { document ->
+                    if (document.exists()) {
+                        navigateToMain()
+                    }
+                }
+                .addOnFailureListener {
+                    navigateToLogin()
+                }
         } else {
             setContent {
                 ThemeMessengerX {
-                    WelcomeScreen(
-                        onGetStartedClick = { navigateToLogin() }
-                    )
+                    WelcomeScreen(onGetStartedClick = { navigateToLogin() })
                 }
             }
         }
     }
+
 
     private fun navigateToMain() {
         val intent = Intent(this, MainActivity::class.java)

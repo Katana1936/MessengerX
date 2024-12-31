@@ -44,31 +44,58 @@ class RegistrationActivity : ComponentActivity() {
     }
 
     private fun registerUser(email: String, password: String, nickname: String) {
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val user = auth.currentUser
-                    if (user != null) {
-                        navigateToMain()
-
-                        saveUserData(user.uid, email, nickname)
-                    } else {
-                        showErrorMessage("Ошибка: пользователь равен null")
-                    }
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .whereEqualTo("email", email)
+            .get()
+            .addOnSuccessListener { documents ->
+                if (documents.isEmpty) {
+                    auth.createUserWithEmailAndPassword(email, password)
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                val user = auth.currentUser
+                                if (user != null) {
+                                    saveUserData(user.uid, email, nickname)
+                                    navigateToMain()
+                                } else {
+                                    showErrorMessage("Ошибка: пользователь равен null")
+                                }
+                            } else {
+                                showErrorMessage(
+                                    task.exception?.localizedMessage ?: "Ошибка регистрации"
+                                )
+                            }
+                        }
                 } else {
-                    showErrorMessage(task.exception?.localizedMessage ?: "Ошибка регистрации")
+                    showErrorMessage("Email уже используется")
                 }
             }
     }
+
 
     private fun saveUserData(userId: String, email: String, nickname: String) {
         val userMap = mapOf(
             "email" to email,
             "nickname" to nickname,
-            "uid" to userId
+            "uid" to userId,
+            "registrationTimestamp" to System.currentTimeMillis() // Сохранение времени регистрации
         )
 
         firestore.collection("users").document(userId)
+            .set(userMap)
+            .addOnSuccessListener {
+                lifecycleScope.launch {
+                    tokenDataStoreManager.saveToken(userId)
+                    navigateToMain()
+                }
+            }
+            .addOnFailureListener { e ->
+                showErrorMessage("Ошибка сохранения данных: ${e.localizedMessage}")
+            }
+
+
+
+    firestore.collection("users").document(userId)
             .set(userMap)
             .addOnSuccessListener {
                 lifecycleScope.launch {
