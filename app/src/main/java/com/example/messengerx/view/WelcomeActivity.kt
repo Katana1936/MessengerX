@@ -40,7 +40,6 @@ class WelcomeActivity : ComponentActivity() {
         val currentUser = auth.currentUser
 
         if (currentUser != null) {
-            // Проверяем, есть ли данные пользователя в Firestore
             FirebaseFirestore.getInstance()
                 .collection("users")
                 .document(currentUser.uid)

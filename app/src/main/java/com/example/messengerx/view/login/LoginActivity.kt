@@ -19,15 +19,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
 import com.example.messengerx.api.TokenDataStoreManager
 import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.MainActivity
 import com.example.messengerx.view.registration.RegistrationActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 
 class LoginActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
