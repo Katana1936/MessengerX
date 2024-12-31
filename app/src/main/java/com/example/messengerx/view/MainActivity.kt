@@ -178,7 +178,7 @@ fun ChatsScreen(
     userId: String,
     apiService: ApiService,
     onChatClick: (String, String) -> Unit,
-    onAddStoryClick: () -> Unit // Добавляем параметр для обработки добавления истории
+    onAddStoryClick: () -> Unit
 ) {
     val chatList by chatViewModel.chatList.collectAsState()
     val errorMessage by chatViewModel.errorMessage.collectAsState()
@@ -192,7 +192,7 @@ fun ChatsScreen(
             StoriesBar(
                 viewModel = storyViewModel,
                 userId = userId,
-                onAddStoryClick = onAddStoryClick, // Передаем обработчик
+                onAddStoryClick = onAddStoryClick, 
                 modifier = Modifier.padding(8.dp)
             )
 
