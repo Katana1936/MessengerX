@@ -1,6 +1,5 @@
 package com.example.messengerx.view.chat
 
-import com.example.messengerx.view.chat.ChatViewModel
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -113,13 +112,16 @@ fun UserInput(
 
 @Composable
 fun MessageItem(message: ApiService.MessageResponse) {
+    val senderId = message.senderId.stringValue ?: "Unknown Sender"
+    val textMessage = message.message.stringValue ?: "No Message"
+
     Column(modifier = Modifier.padding(8.dp)) {
         Text(
-            text = "From: ${message.senderId}",
+            text = "From: $senderId",
             style = MaterialTheme.typography.labelSmall
         )
         Text(
-            text = message.message,
+            text = textMessage,
             style = MaterialTheme.typography.bodyMedium
         )
     }

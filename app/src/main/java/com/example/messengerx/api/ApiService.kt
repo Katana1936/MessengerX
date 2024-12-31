@@ -1,5 +1,7 @@
 package com.example.messengerx.api
 
+import com.example.messengerx.view.contact.ContactRequest
+import com.example.messengerx.view.contact.ContactResponse
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -29,21 +31,20 @@ interface ApiService {
     @DELETE("contacts/{id}.json")
     suspend fun deleteContact(@Path("id") id: String): Map<String, String>
 
-    @Headers("Accept: application/json")
     @GET("chats")
     suspend fun getChats(): FirestoreResponse<ChatResponse>
 
-    @Headers("Accept: application/json")
     @POST("chats")
-    suspend fun createChat(@Body request: ChatRequest): FirestoreDocumentResponse
+    suspend fun createChat(@Body request: FirestoreDocumentRequest<ChatRequest>): FirestoreDocumentResponse
 
-    @Headers("Accept: application/json")
     @GET("chats/{chatId}/messages")
     suspend fun getMessages(@Path("chatId") chatId: String): FirestoreResponse<MessageResponse>
 
-    @Headers("Accept: application/json")
     @POST("chats/{chatId}/messages")
-    suspend fun sendMessage(@Path("chatId") chatId: String, @Body message: MessageRequest)
+    suspend fun sendMessage(
+        @Path("chatId") chatId: String,
+        @Body request: FirestoreDocumentRequest<MessageRequest>
+    )
 
     @Headers("Accept: application/json")
     @GET("stories/{userId}/userStories.json")
@@ -64,25 +65,27 @@ interface ApiService {
         val userId: String
     )
 
-    data class ChatItem(
-        val id: String,
-        val name: String
-    )
-
     data class ChatRequest(
-        val participants: List<String>,
-        val lastMessage: String,
-        val timestamp: Long
-    )
-
-    data class ChatResponse(
-        val name: FieldValue,
-        val timestamp: FieldValue,
-        val participants: List<FieldValue> = emptyList()
+        val participants: List<FieldValue>,
+        val lastMessage: FieldValue,
+        val timestamp: FieldValue
     )
 
     data class MessageRequest(
-        val fields: Map<String, FieldValue>
+        val senderId: FieldValue,
+        val message: FieldValue,
+        val timestamp: FieldValue
+    )
+
+    data class ChatResponse(
+        val participants: List<FieldValue>,
+        val lastMessage: FieldValue,
+        val timestamp: FieldValue
+    )
+
+    data class ChatItem(
+        val id: String,
+        val name: String
     )
 
     data class MessageResponse(
@@ -91,13 +94,22 @@ interface ApiService {
         val timestamp: FieldValue
     )
 
-    // Firestore-specific data classes
-    data class FirestoreResponse<T>(
-        val documents: List<Document<T>>
+    data class FieldValue(
+        val stringValue: String? = null,
+        val timestampValue: String? = null
     )
+
+    data class FirestoreResponse<T>(
+        val documents: List<Document<Map<String, FieldValue>>>
+    )
+
 
     data class FirestoreDocumentResponse(
         val name: String
+    )
+
+    data class FirestoreDocumentRequest<T>(
+        val fields: T
     )
 
     data class Document<T>(
@@ -105,8 +117,4 @@ interface ApiService {
         val fields: T
     )
 
-    data class FieldValue(
-        val stringValue: String? = null,
-        val integerValue: String? = null
-    )
 }

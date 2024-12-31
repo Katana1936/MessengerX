@@ -23,12 +23,24 @@ fun ChatItemCard(
 
     LaunchedEffect(chat.id) {
         try {
-            val messages = apiService.getMessages(chat.id).sortedByDescending { it.timestamp }
+            val response = apiService.getMessages(chat.id)
+            val messages = response.documents.map { document ->
+                val fields = document.fields
+                ApiService.MessageResponse(
+                    senderId = fields["senderId"] ?: ApiService.FieldValue(),
+                    message = fields["message"] ?: ApiService.FieldValue(),
+                    timestamp = fields["timestamp"] ?: ApiService.FieldValue()
+                )
+            }
 
-            if (messages.isNotEmpty()) {
-                val message = messages.first()
-                lastMessage = message.message
-                lastMessageTime = formatTimeAgo(message.timestamp)
+            val sortedMessages = messages.sortedByDescending {
+                it.timestamp.stringValue?.toLongOrNull() ?: 0L
+            }
+
+            if (sortedMessages.isNotEmpty()) {
+                val message = sortedMessages.first()
+                lastMessage = message.message.stringValue ?: "No message"
+                lastMessageTime = formatTimeAgo(message.timestamp.stringValue?.toLongOrNull() ?: 0L)
             } else {
                 lastMessage = "No messages yet"
                 lastMessageTime = "N/A"
@@ -38,8 +50,6 @@ fun ChatItemCard(
             lastMessageTime = "N/A"
         }
     }
-
-
 
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),

@@ -192,7 +192,7 @@ fun ChatsScreen(
             StoriesBar(
                 viewModel = storyViewModel,
                 userId = userId,
-                onAddStoryClick = onAddStoryClick, 
+                onAddStoryClick = onAddStoryClick,
                 modifier = Modifier.padding(8.dp)
             )
 

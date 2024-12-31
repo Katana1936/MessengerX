@@ -11,17 +11,22 @@ object RetrofitClient {
         "https://firestore.googleapis.com/v1/projects/messengerx-df3ea/databases/(default)/documents/"
 
     private lateinit var retrofit: Retrofit
+    private var currentToken: String? = null
 
     fun getInstance(token: String? = null): ApiService {
-        if (!::retrofit.isInitialized) {
+        if (token != null) {
+            currentToken = token
+        }
+
+        if (!::retrofit.isInitialized || currentToken != token) {
             val loggingInterceptor = HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             }
 
             val authInterceptor = Interceptor { chain ->
                 val requestBuilder = chain.request().newBuilder()
-                if (!token.isNullOrEmpty()) {
-                    requestBuilder.addHeader("Authorization", "Bearer $token")
+                if (!currentToken.isNullOrEmpty()) {
+                    requestBuilder.addHeader("Authorization", "Bearer $currentToken")
                 }
                 chain.proceed(requestBuilder.build())
             }
@@ -40,3 +45,4 @@ object RetrofitClient {
         return retrofit.create(ApiService::class.java)
     }
 }
+

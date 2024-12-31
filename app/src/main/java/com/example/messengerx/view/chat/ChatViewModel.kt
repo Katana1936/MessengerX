@@ -9,11 +9,11 @@ import kotlinx.coroutines.launch
 
 class ChatViewModel(private val apiService: ApiService) : ViewModel() {
 
-    private val _messages = MutableStateFlow<List<ApiService.MessageResponse>>(emptyList())
-    val messages: StateFlow<List<ApiService.MessageResponse>> = _messages
-
     private val _chatList = MutableStateFlow<List<ApiService.ChatItem>>(emptyList())
     val chatList: StateFlow<List<ApiService.ChatItem>> = _chatList
+
+    private val _messages = MutableStateFlow<List<ApiService.MessageResponse>>(emptyList())
+    val messages: StateFlow<List<ApiService.MessageResponse>> = _messages
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
@@ -22,39 +22,33 @@ class ChatViewModel(private val apiService: ApiService) : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = apiService.getChats()
-                println("Ответ сервера: $response")
-
-                if (response.isNullOrEmpty()) {
-                    _errorMessage.value = "Список чатов пуст или сервер вернул пустой ответ"
-                    return@launch
-                }
-
-                val chatItems = response.map { (id, chatResponse) ->
+                val chatItems = response.documents.map { document ->
                     ApiService.ChatItem(
-                        id = id,
-                        name = chatResponse.name.ifEmpty { "Без имени" }
+                        id = document.name.substringAfterLast("/"), // Получение ID
+                        name = document.fields["name"]?.stringValue ?: "Без имени"
                     )
                 }
                 _chatList.value = chatItems
             } catch (e: Exception) {
-                _errorMessage.value = "Ошибка подключения: ${e.localizedMessage}"
+                _errorMessage.value = "Ошибка загрузки чатов: ${e.localizedMessage}"
             }
         }
     }
-
-
-
-
 
     fun loadMessages(chatId: String) {
         viewModelScope.launch {
             try {
                 val response = apiService.getMessages(chatId)
-
-                val sortedMessages = response.sortedBy { it.timestamp }
-                _messages.value = sortedMessages
+                val messages = response.documents.map { document ->
+                    ApiService.MessageResponse(
+                        senderId = document.fields["senderId"] ?: ApiService.FieldValue(),
+                        message = document.fields["message"] ?: ApiService.FieldValue(),
+                        timestamp = document.fields["timestamp"] ?: ApiService.FieldValue()
+                    )
+                }
+                _messages.value = messages
             } catch (e: Exception) {
-                _errorMessage.value = "Ошибка: ${e.localizedMessage}"
+                _errorMessage.value = "Ошибка загрузки сообщений: ${e.localizedMessage}"
             }
         }
     }
@@ -63,8 +57,12 @@ class ChatViewModel(private val apiService: ApiService) : ViewModel() {
     fun sendMessage(chatId: String, senderId: String, message: String) {
         viewModelScope.launch {
             try {
-                val messageRequest = ApiService.MessageRequest(senderId, message, System.currentTimeMillis())
-                apiService.sendMessage(chatId, messageRequest)
+                val messageRequest = ApiService.MessageRequest(
+                    senderId = ApiService.FieldValue(stringValue = senderId),
+                    message = ApiService.FieldValue(stringValue = message),
+                    timestamp = ApiService.FieldValue(timestampValue = System.currentTimeMillis().toString())
+                )
+                apiService.sendMessage(chatId, ApiService.FirestoreDocumentRequest(messageRequest))
                 loadMessages(chatId)
             } catch (e: Exception) {
                 _errorMessage.value = "Ошибка отправки сообщения: ${e.localizedMessage}"
