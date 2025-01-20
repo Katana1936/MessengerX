@@ -39,7 +39,6 @@ fun BottomNavigationBar(
         items.forEachIndexed { index, item ->
             val isSelected = selectedItem == index
 
-            // Анимация цвета и масштаба для иконок
             val iconColor by animateColorAsState(
                 targetValue = if (isSelected) Color.Black else Color.Gray
             )

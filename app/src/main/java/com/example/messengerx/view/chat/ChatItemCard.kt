@@ -50,7 +50,6 @@ fun ChatItemCard(
             lastMessageTime = "N/A"
         }
     }
-
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier
