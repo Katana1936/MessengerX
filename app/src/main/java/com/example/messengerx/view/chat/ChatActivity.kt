@@ -82,8 +82,6 @@ fun ChatScreen(chatId: String, chatName: String, apiService: ApiService) {
     }
 }
 
-
-
 @Composable
 fun UserInput(
     messageText: String,
