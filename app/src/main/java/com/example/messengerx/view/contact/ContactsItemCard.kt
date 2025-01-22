@@ -27,7 +27,6 @@ fun ContactsItemCard(contact: ContactResponse, onClick: () -> Unit) {
                 .size(48.dp)
                 .background(MaterialTheme.colorScheme.primary, shape = CircleShape)
         ) {
-            // Место для аватара (опционально)
         }
 
         Spacer(modifier = Modifier.width(16.dp))

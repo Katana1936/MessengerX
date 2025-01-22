@@ -84,7 +84,7 @@ fun PermissionDeniedDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = { /* Логика закрытия или дополнительное действие */ }) {
+            TextButton(onClick = {  }) {
                 Text("Закрыть")
             }
         }

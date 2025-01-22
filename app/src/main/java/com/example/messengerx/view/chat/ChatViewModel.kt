@@ -24,7 +24,7 @@ class ChatViewModel(private val apiService: ApiService) : ViewModel() {
                 val response = apiService.getChats()
                 val chatItems = response.documents.map { document ->
                     ApiService.ChatItem(
-                        id = document.name.substringAfterLast("/"), // Получение ID
+                        id = document.name.substringAfterLast("/"), 
                         name = document.fields["name"]?.stringValue ?: "Без имени"
                     )
                 }
