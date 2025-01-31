@@ -6,33 +6,45 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
-import com.example.messengerx.api.TokenDataStoreManager
 import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.MainActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.launch
 
 class RegistrationActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
-    private lateinit var tokenDataStoreManager: TokenDataStoreManager
     private val firestore = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         auth = FirebaseAuth.getInstance()
-        tokenDataStoreManager = TokenDataStoreManager(this)
 
         setContent {
             ThemeMessengerX {
@@ -44,67 +56,48 @@ class RegistrationActivity : ComponentActivity() {
     }
 
     private fun registerUser(email: String, password: String, nickname: String) {
-        FirebaseFirestore.getInstance()
-            .collection("users")
+        // Проверяем, существует ли пользователь с таким email в Firestore
+        firestore.collection("users")
             .whereEqualTo("email", email)
             .get()
             .addOnSuccessListener { documents ->
                 if (documents.isEmpty) {
+                    // Создаем учетную запись в Firebase Auth
                     auth.createUserWithEmailAndPassword(email, password)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
                                 val user = auth.currentUser
                                 if (user != null) {
                                     saveUserData(user.uid, email, nickname)
-                                    navigateToMain()
-                                } else {
-                                    showErrorMessage("Ошибка: пользователь равен null")
                                 }
                             } else {
-                                showErrorMessage(
-                                    task.exception?.localizedMessage ?: "Ошибка регистрации"
-                                )
+                                showToast(task.exception?.localizedMessage ?: "Ошибка регистрации")
                             }
                         }
                 } else {
-                    showErrorMessage("Email уже используется")
+                    showToast("Email уже используется")
                 }
+            }
+            .addOnFailureListener { exception ->
+                showToast("Ошибка проверки email: ${exception.localizedMessage}")
             }
     }
 
-
     private fun saveUserData(userId: String, email: String, nickname: String) {
         val userMap = mapOf(
+            "uid" to userId,
             "email" to email,
             "nickname" to nickname,
-            "uid" to userId,
-            "registrationTimestamp" to System.currentTimeMillis() // Сохранение времени регистрации
+            "registrationTimestamp" to System.currentTimeMillis()
         )
 
         firestore.collection("users").document(userId)
             .set(userMap)
             .addOnSuccessListener {
-                lifecycleScope.launch {
-                    tokenDataStoreManager.saveToken(userId)
-                    navigateToMain()
-                }
+                navigateToMain()
             }
-            .addOnFailureListener { e ->
-                showErrorMessage("Ошибка сохранения данных: ${e.localizedMessage}")
-            }
-
-
-
-    firestore.collection("users").document(userId)
-            .set(userMap)
-            .addOnSuccessListener {
-                lifecycleScope.launch {
-                    tokenDataStoreManager.saveToken(userId)
-                    navigateToMain()
-                }
-            }
-            .addOnFailureListener { e ->
-                showErrorMessage("Ошибка сохранения данных: ${e.localizedMessage}")
+            .addOnFailureListener { exception ->
+                showToast("Ошибка сохранения данных: ${exception.localizedMessage}")
             }
     }
 
@@ -114,13 +107,13 @@ class RegistrationActivity : ComponentActivity() {
         startActivity(intent)
     }
 
-    private fun showErrorMessage(message: String) {
+    private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }
 
 @Composable
-fun RegistrationScreen(onRegisterSuccess: (String, String, String) -> Unit) {
+fun RegistrationScreen(onRegister: (String, String, String) -> Unit) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var nickname by remember { mutableStateOf("") }
@@ -142,7 +135,7 @@ fun RegistrationScreen(onRegisterSuccess: (String, String, String) -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Register",
+                text = "Регистрация",
                 style = MaterialTheme.typography.displayMedium,
                 color = Color.Black
             )
@@ -156,46 +149,51 @@ fun RegistrationScreen(onRegisterSuccess: (String, String, String) -> Unit) {
             OutlinedTextField(
                 value = nickname,
                 onValueChange = { nickname = it },
-                label = { Text("Nickname") },
+                label = { Text("Никнейм") },
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password") },
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation()
+                label = { Text("Пароль") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
             )
             if (errorMessage.isNotEmpty()) {
-                Text(errorMessage, color = Color.Red)
-                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = errorMessage,
+                    color = Color.Red,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
+            Spacer(modifier = Modifier.height(10.dp))
             if (isLoading) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             } else {
                 Button(
                     onClick = {
-                        if (email.isBlank() || password.isBlank() || nickname.isBlank()) {
-                            errorMessage = "Пожалуйста, заполните все поля"
-                        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                            errorMessage = "Введите корректный Email"
-                        } else if (password.length < 6) {
-                            errorMessage = "Пароль должен быть не менее 6 символов"
-                        } else {
-                            errorMessage = ""
-                            isLoading = true
-                            onRegisterSuccess(email, password, nickname)
+                        when {
+                            email.isBlank() || password.isBlank() || nickname.isBlank() -> {
+                                errorMessage = "Все поля должны быть заполнены"
+                            }
+                            password.length < 6 -> {
+                                errorMessage = "Пароль должен содержать минимум 6 символов"
+                            }
+                            else -> {
+                                errorMessage = ""
+                                isLoading = true
+                                onRegister(email, password, nickname)
+                            }
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFF2681B)
-                    ),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF2681B)),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier
                         .fillMaxWidth(0.6f)
                         .height(45.dp)
+                        .align(Alignment.CenterHorizontally)
                 ) {
-                    Text("Register", color = Color.White)
+                    Text("Зарегистрироваться", color = Color.White)
                 }
             }
         }

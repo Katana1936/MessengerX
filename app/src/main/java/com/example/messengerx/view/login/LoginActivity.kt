@@ -19,12 +19,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import com.example.messengerx.api.TokenDataStoreManager
 import com.example.messengerx.ui.theme.ThemeMessengerX
 import com.example.messengerx.view.MainActivity
 import com.example.messengerx.view.registration.RegistrationActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 
 class LoginActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
@@ -74,37 +76,31 @@ class LoginActivity : ComponentActivity() {
                                     showToast("Пользователь не найден в базе.")
                                 }
                             }
-                    }
-                } else {
-                    showToast(task.exception?.localizedMessage ?: "Ошибка входа")
-                }
-            }
-
-
-
-
-
-    auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val user = auth.currentUser
-                    if (user != null) {
-                        FirebaseFirestore.getInstance()
-                            .collection("users")
-                            .document(user.uid)
-                            .get()
-                            .addOnSuccessListener { document ->
-                                if (document.exists()) {
-                                    navigateToMain()
-                                } else {
-                                    showToast("Пользователь не найден в системе.")
-                                }
+                            .addOnFailureListener {
+                                showToast("Ошибка доступа к базе данных")
                             }
                     }
                 } else {
                     showToast(task.exception?.localizedMessage ?: "Ошибка входа")
                 }
             }
+    }
+
+    private fun saveFirebaseToken() {
+        val currentUser = auth.currentUser
+        currentUser?.getIdToken(true)?.addOnSuccessListener { result ->
+            val token = result.token
+            if (!token.isNullOrEmpty()) {
+                lifecycleScope.launch {
+                    tokenDataStoreManager.saveToken(token)
+                    showToast("Токен сохранен успешно")
+                }
+            } else {
+                showToast("Не удалось получить токен")
+            }
+        }?.addOnFailureListener {
+            showToast("Ошибка получения токена: ${it.localizedMessage}")
+        }
     }
 
     private fun isNetworkAvailable(): Boolean {
@@ -118,7 +114,6 @@ class LoginActivity : ComponentActivity() {
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
-
 
     private fun navigateToMain() {
         val intent = Intent(this, MainActivity::class.java)
@@ -185,7 +180,7 @@ fun LoginScreen(onLogin: (String, String) -> Unit, onRegisterClick: () -> Unit) 
                             errorMessage = ""
                             onLogin(email, password)
                         } else {
-                            errorMessage = "Please fill out all fields"
+                            errorMessage = "Пожалуйста, заполните все поля"
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -196,12 +191,12 @@ fun LoginScreen(onLogin: (String, String) -> Unit, onRegisterClick: () -> Unit) 
                         .fillMaxWidth(0.6f)
                         .height(45.dp)
                 ) {
-                    Text("Log In", color = Color.White)
+                    Text("Войти", color = Color.White)
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = "If you don't have an account, sign up.",
+                text = "Если у вас нет аккаунта, зарегистрируйтесь.",
                 color = Color.Gray,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.clickable(onClick = onRegisterClick)
