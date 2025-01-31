@@ -1,6 +1,5 @@
 package com.example.messengerx.view
 
-import com.example.messengerx.view.stories.StoriesBar
 import com.example.messengerx.view.stories.StoryViewModel
 import android.content.Intent
 import android.os.Bundle
@@ -38,6 +37,8 @@ import com.example.messengerx.view.contact.ContactsScreen
 import com.example.messengerx.view.contact.ContactsViewModel
 import com.example.messengerx.view.contact.ContactsViewModelFactory
 import com.example.messengerx.view.login.LoginActivity
+import com.example.messengerx.view.stories.AddStoryScreen
+import com.example.messengerx.view.stories.StoriesCarousel
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
@@ -154,7 +155,7 @@ fun NavigationHost(
 
         composable("add_story") {
             val storyViewModel = remember { StoryViewModel(apiService) }
-            StoriesBar(
+            AddStoryScreen(
                 viewModel = storyViewModel,
                 userId = "user1",
                 onStoryPublished = {
@@ -165,6 +166,8 @@ fun NavigationHost(
                 }
             )
         }
+
+
     }
 }
 
@@ -187,12 +190,12 @@ fun ChatsScreen(
 
     Scaffold { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            StoriesBar(
+            StoriesCarousel(
                 viewModel = storyViewModel,
                 userId = userId,
-                onAddStoryClick = onAddStoryClick,
                 modifier = Modifier.padding(8.dp)
             )
+
 
             Text(
                 text = "Chats",
