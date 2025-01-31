@@ -87,5 +87,7 @@ dependencies {
     implementation (libs.firebase.database.ktx)
     implementation (libs.androidx.datastore.preferences)
     implementation (libs.androidx.datastore.core)
+    implementation (libs.accompanist.pager)
+    implementation (libs.accompanist.pager.indicators)
 
 }

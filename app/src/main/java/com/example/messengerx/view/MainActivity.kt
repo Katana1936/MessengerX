@@ -1,6 +1,7 @@
 package com.example.messengerx.view
 
-import StoriesBar
+import com.example.messengerx.view.stories.StoriesBar
+import com.example.messengerx.view.stories.StoryViewModel
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -37,8 +38,6 @@ import com.example.messengerx.view.contact.ContactsScreen
 import com.example.messengerx.view.contact.ContactsViewModel
 import com.example.messengerx.view.contact.ContactsViewModelFactory
 import com.example.messengerx.view.login.LoginActivity
-import com.example.messengerx.view.stories.AddStoryScreen
-import com.example.messengerx.view.stories.StoryViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
@@ -155,7 +154,7 @@ fun NavigationHost(
 
         composable("add_story") {
             val storyViewModel = remember { StoryViewModel(apiService) }
-            AddStoryScreen(
+            StoriesBar(
                 viewModel = storyViewModel,
                 userId = "user1",
                 onStoryPublished = {
