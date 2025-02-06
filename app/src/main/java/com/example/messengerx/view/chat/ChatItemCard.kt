@@ -65,14 +65,12 @@ fun ChatItemCard(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(modifier = Modifier.weight(1f)) {
-                // Avatar
                 Surface(
                     modifier = Modifier
                         .size(50.dp),
                     shape = MaterialTheme.shapes.medium,
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                 ) {
-                    // Text avatar with the first letter of the name
                     Text(
                         text = chat.name.firstOrNull()?.toString()?.uppercase() ?: "",
                         modifier = Modifier.padding(12.dp),

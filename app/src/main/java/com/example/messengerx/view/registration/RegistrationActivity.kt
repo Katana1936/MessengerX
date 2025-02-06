@@ -56,7 +56,6 @@ class RegistrationActivity : ComponentActivity() {
     }
 
     private fun registerUser(email: String, password: String, nickname: String) {
-        // Проверяем, существует ли пользователь с таким email в Firestore
         firestore.collection("users")
             .whereEqualTo("email", email)
             .get()
