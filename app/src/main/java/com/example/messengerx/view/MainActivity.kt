@@ -1,13 +1,15 @@
 package com.example.messengerx.view
 
-import com.example.messengerx.view.stories.StoryViewModel
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,10 +18,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,7 +31,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -48,6 +49,8 @@ import com.example.messengerx.view.contact.ContactsViewModelFactory
 import com.example.messengerx.view.login.LoginActivity
 import com.example.messengerx.view.stories.AddStoryScreen
 import com.example.messengerx.view.stories.StoriesCarousel
+import com.example.messengerx.view.stories.StoryViewModel
+import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
@@ -104,7 +107,7 @@ fun MainScreen(apiService: ApiService) {
 
 @Composable
 fun NavigationHost(
-    navController: NavHostController,
+    navController: androidx.navigation.NavHostController,
     apiService: ApiService,
     modifier: Modifier = Modifier
 ) {
@@ -114,35 +117,37 @@ fun NavigationHost(
         modifier = modifier
     ) {
         composable("chats") {
+            // Создаем два viewModel: для чатов и для историй
             val chatViewModel = remember { ChatViewModel(apiService) }
+            val storyViewModel = remember { StoryViewModel(apiService) }
             ChatsScreen(
                 chatViewModel = chatViewModel,
+                storyViewModel = storyViewModel,
                 apiService = apiService,
                 onChatClick = { chatId, chatName ->
                     navController.navigate("chat/$chatId/$chatName")
                 },
                 onNewChatClick = {
-                    navController.navigate("contacts") 
+                    navController.navigate("contacts")
+                },
+                onAddStoryClick = {
+                    // Переход на экран добавления истории
+                    navController.navigate("add_story")
                 }
             )
         }
-
-
         composable("contacts") {
             val contactsViewModel = remember {
                 ContactsViewModelFactory(apiService).create(ContactsViewModel::class.java)
             }
             ContactsScreen(viewModel = contactsViewModel)
         }
-
         composable("account") {
             PlaceholderScreen("Аккаунт временно недоступен")
         }
-
         composable("settings") {
             PlaceholderScreen("Настройки временно недоступны")
         }
-
         composable(
             route = "chat/{chatId}/{chatName}",
             arguments = listOf(
@@ -152,14 +157,12 @@ fun NavigationHost(
         ) { backStackEntry ->
             val chatId = backStackEntry.arguments?.getString("chatId") ?: return@composable
             val chatName = backStackEntry.arguments?.getString("chatName") ?: "Чат"
-
             ChatScreen(
                 chatId = chatId,
                 chatName = chatName,
                 apiService = apiService
             )
         }
-
         composable("add_story") {
             val storyViewModel = remember { StoryViewModel(apiService) }
             AddStoryScreen(
@@ -173,19 +176,18 @@ fun NavigationHost(
                 }
             )
         }
-
-
     }
 }
 
-
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPagerApi::class)
 @Composable
 fun ChatsScreen(
     chatViewModel: ChatViewModel,
+    storyViewModel: com.example.messengerx.view.stories.StoryViewModel,
     apiService: ApiService,
     onChatClick: (String, String) -> Unit,
-    onNewChatClick: () -> Unit // Callback для создания нового чата (например, переход к контактам)
+    onNewChatClick: () -> Unit, // для создания нового чата (нижний FAB)
+    onAddStoryClick: () -> Unit   // для добавления истории (верхняя кнопка +)
 ) {
     val chatList by chatViewModel.chatList.collectAsState()
     val errorMessage by chatViewModel.errorMessage.collectAsState()
@@ -195,44 +197,80 @@ fun ChatsScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Чаты") }
-            )
-        },
+        // Отказываемся от стандартного TopAppBar, чтобы создать свой header с историями
         floatingActionButton = {
+            // FAB для создания нового чата (снизу экрана)
             FloatingActionButton(
                 onClick = onNewChatClick,
                 content = {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Новый чат")
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Новый чат"
+                    )
                 }
             )
         }
     ) { innerPadding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            when {
-                errorMessage != null -> {
-                    Text(
-                        text = errorMessage ?: "Ошибка загрузки",
-                        modifier = Modifier.align(Alignment.Center)
+            // Блок с каруселью историй и кнопкой добавления истории
+            Box(modifier = Modifier.fillMaxWidth()) {
+                StoriesCarousel(
+                    viewModel = storyViewModel,
+                    userId = "user1", // замените на актуальный uid
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                )
+                // Кнопка «+» для добавления истории – расположена в правом верхнем углу блока с историями
+                IconButton(
+                    onClick = onAddStoryClick,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Добавить историю",
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
-                chatList.isEmpty() -> {
-                    Text(
-                        text = "Чатов пока нет",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-                else -> {
-                    LazyColumn {
-                        items(chatList) { chat ->
-                            ChatItemCard(chat = chat, apiService = apiService) {
-                                onChatClick(chat.id, chat.name)
+            }
+
+            // Заголовок "Чаты" располагается ниже блока с историями
+            Text(
+                text = "Чаты",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Содержимое экрана: либо список чатов, либо сообщение об ошибке/пустом списке
+            Box(modifier = Modifier.fillMaxSize()) {
+                when {
+                    errorMessage != null -> {
+                        Text(
+                            text = errorMessage ?: "Ошибка загрузки",
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
+                    chatList.isEmpty() -> {
+                        Text(
+                            text = "Чатов пока нет",
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
+                    else -> {
+                        LazyColumn {
+                            items(chatList) { chat ->
+                                ChatItemCard(chat = chat, apiService = apiService) {
+                                    onChatClick(chat.id, chat.name)
+                                }
                             }
                         }
                     }
@@ -246,13 +284,11 @@ fun ChatsScreen(
 @Composable
 fun PlaceholderScreen(message: String) {
     Scaffold {
-        Column(
-            modifier = Modifier.padding(it)
-        ) {
+        Column(modifier = Modifier.padding(it)) {
             Text(
                 text = message,
                 color = Color.Gray,
-                style = androidx.compose.material3.MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(16.dp)
             )
         }

@@ -50,7 +50,7 @@ fun ChatScreen(chatId: String, chatName: String, apiService: ApiService) {
             TopAppBar(
                 title = { Text(chatName) },
                 navigationIcon = {
-                    IconButton(onClick = { /* Handle back navigation */ }) {
+                    IconButton(onClick = {  }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
