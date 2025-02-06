@@ -117,7 +117,6 @@ fun NavigationHost(
         modifier = modifier
     ) {
         composable("chats") {
-            // Создаем два viewModel: для чатов и для историй
             val chatViewModel = remember { ChatViewModel(apiService) }
             val storyViewModel = remember { StoryViewModel(apiService) }
             ChatsScreen(
@@ -131,7 +130,6 @@ fun NavigationHost(
                     navController.navigate("contacts")
                 },
                 onAddStoryClick = {
-                    // Переход на экран добавления истории
                     navController.navigate("add_story")
                 }
             )
@@ -186,8 +184,8 @@ fun ChatsScreen(
     storyViewModel: com.example.messengerx.view.stories.StoryViewModel,
     apiService: ApiService,
     onChatClick: (String, String) -> Unit,
-    onNewChatClick: () -> Unit, // для создания нового чата (нижний FAB)
-    onAddStoryClick: () -> Unit   // для добавления истории (верхняя кнопка +)
+    onNewChatClick: () -> Unit,
+    onAddStoryClick: () -> Unit
 ) {
     val chatList by chatViewModel.chatList.collectAsState()
     val errorMessage by chatViewModel.errorMessage.collectAsState()
@@ -197,9 +195,7 @@ fun ChatsScreen(
     }
 
     Scaffold(
-        // Отказываемся от стандартного TopAppBar, чтобы создать свой header с историями
         floatingActionButton = {
-            // FAB для создания нового чата (снизу экрана)
             FloatingActionButton(
                 onClick = onNewChatClick,
                 content = {
@@ -216,16 +212,14 @@ fun ChatsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Блок с каруселью историй и кнопкой добавления истории
             Box(modifier = Modifier.fillMaxWidth()) {
                 StoriesCarousel(
                     viewModel = storyViewModel,
-                    userId = "user1", // замените на актуальный uid
+                    userId = "user1",
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
                 )
-                // Кнопка «+» для добавления истории – расположена в правом верхнем углу блока с историями
                 IconButton(
                     onClick = onAddStoryClick,
                     modifier = Modifier
@@ -240,7 +234,6 @@ fun ChatsScreen(
                 }
             }
 
-            // Заголовок "Чаты" располагается ниже блока с историями
             Text(
                 text = "Чаты",
                 style = MaterialTheme.typography.headlineMedium,
@@ -249,7 +242,6 @@ fun ChatsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Содержимое экрана: либо список чатов, либо сообщение об ошибке/пустом списке
             Box(modifier = Modifier.fillMaxSize()) {
                 when {
                     errorMessage != null -> {
