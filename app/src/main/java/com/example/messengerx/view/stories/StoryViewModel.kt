@@ -11,11 +11,9 @@ import kotlinx.coroutines.launch
 
 class StoryViewModel(private val apiService: ApiService) : ViewModel() {
 
-    // StateFlow для хранения списка историй
     private val _stories = MutableStateFlow<List<ApiService.Story>>(emptyList())
     val stories: StateFlow<List<ApiService.Story>> = _stories
 
-    // Метод для получения списка историй пользователя
     fun fetchStories(userId: String) {
         viewModelScope.launch {
             try {

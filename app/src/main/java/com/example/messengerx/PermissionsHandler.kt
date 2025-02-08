@@ -43,7 +43,6 @@ fun PermissionsHandler(
             onPermissionsDenied?.invoke()
         }
     }
-
     if (allPermissionsGranted) {
         content()
     } else {
