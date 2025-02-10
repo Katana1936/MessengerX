@@ -36,9 +36,9 @@ class ChatActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(chatId: String, chatName: String, apiService: ApiService) {
-    val viewModel: ChatViewModel = viewModel(factory = ChatViewModelFactory(apiService))
-    var messageText by remember { mutableStateOf("") }
+    val viewModel: ChatViewModel = viewModel()
 
+    var messageText by remember { mutableStateOf("") }
     val messages by viewModel.messages.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -50,7 +50,7 @@ fun ChatScreen(chatId: String, chatName: String, apiService: ApiService) {
             TopAppBar(
                 title = { Text(chatName) },
                 navigationIcon = {
-                    IconButton(onClick = {  }) {
+                    IconButton(onClick = { }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
@@ -81,7 +81,6 @@ fun ChatScreen(chatId: String, chatName: String, apiService: ApiService) {
         }
     }
 }
-
 
 @Composable
 fun UserInput(

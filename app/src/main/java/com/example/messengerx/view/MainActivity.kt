@@ -135,9 +135,7 @@ fun NavigationHost(
             )
         }
         composable("contacts") {
-            val contactsViewModel = remember {
-                ContactsViewModelFactory(apiService).create(ContactsViewModel::class.java)
-            }
+            val contactsViewModel = remember { ContactsViewModel(apiService) }
             ContactsScreen(viewModel = contactsViewModel)
         }
         composable("account") {
@@ -177,11 +175,11 @@ fun NavigationHost(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPagerApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatsScreen(
     chatViewModel: ChatViewModel,
-    storyViewModel: com.example.messengerx.view.stories.StoryViewModel,
+    storyViewModel: StoryViewModel,
     apiService: ApiService,
     onChatClick: (String, String) -> Unit,
     onNewChatClick: () -> Unit,
@@ -243,26 +241,22 @@ fun ChatsScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Box(modifier = Modifier.fillMaxSize()) {
-                when {
-                    errorMessage != null -> {
-                        Text(
-                            text = errorMessage ?: "Ошибка загрузки",
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    }
-                    chatList.isEmpty() -> {
-                        Text(
-                            text = "Чатов пока нет",
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    }
-                    else -> {
-                        LazyColumn {
-                            items(chatList) { chat ->
-                                ChatItemCard(chat = chat, apiService = apiService) {
-                                    onChatClick(chat.id, chat.name)
-                                }
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage ?: "Ошибка загрузки",
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                } else if (chatList.isEmpty()) {
+                    Text(
+                        text = "Чатов пока нет",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                } else {
+                    LazyColumn {
+                        items(chatList) { chat ->
+                            ChatItemCard(chat = chat, apiService = apiService) {
+                                onChatClick(chat.id, chat.name)
                             }
                         }
                     }
@@ -271,7 +265,6 @@ fun ChatsScreen(
         }
     }
 }
-
 
 @Composable
 fun PlaceholderScreen(message: String) {

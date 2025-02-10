@@ -22,7 +22,6 @@ fun StoriesCarousel(
     val stories by viewModel.stories.collectAsState()
     val pagerState = rememberPagerState()
 
-    // Загружаем истории при запуске
     LaunchedEffect(Unit) {
         viewModel.fetchStories(userId)
     }
