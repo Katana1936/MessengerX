@@ -32,6 +32,8 @@ fun BottomNavigationBar(
         R.drawable.ic_settings
     )
 
+
+    
     NavigationBar(
         modifier = modifier.fillMaxWidth(),
         containerColor = backgroundColor
@@ -45,6 +47,8 @@ fun BottomNavigationBar(
             val scale by animateFloatAsState(
                 targetValue = if (isSelected) 1.2f else 1.0f
             )
+
+
 
             NavigationBarItem(
                 icon = {
