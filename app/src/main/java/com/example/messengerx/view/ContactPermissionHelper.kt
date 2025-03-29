@@ -15,15 +15,20 @@ class ContactPermissionHelper(
     fun checkAndRequestPermission() {
         val context = activity.applicationContext
         when {
-            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED -> {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.READ_CONTACTS
+            ) == PackageManager.PERMISSION_GRANTED -> {
                 onPermissionGranted()
             }
+
             else -> {
                 activity.registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
                     if (isGranted) {
                         onPermissionGranted()
                     } else {
-                        Toast.makeText(context, "Доступ к контактам отклонен", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Доступ к контактам отклонен", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }.launch(Manifest.permission.READ_CONTACTS)
             }

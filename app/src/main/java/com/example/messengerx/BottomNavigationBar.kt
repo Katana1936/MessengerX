@@ -33,7 +33,7 @@ fun BottomNavigationBar(
     )
 
 
-    
+
     NavigationBar(
         modifier = modifier.fillMaxWidth(),
         containerColor = backgroundColor

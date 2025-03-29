@@ -26,7 +26,10 @@ fun PermissionsHandler(
     val permissionStatus = permissions.associateWith { permission ->
         remember {
             mutableStateOf(
-                ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+                ContextCompat.checkSelfPermission(
+                    context,
+                    permission
+                ) == PackageManager.PERMISSION_GRANTED
             )
         }
     }
@@ -83,7 +86,7 @@ fun PermissionDeniedDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = {  }) {
+            TextButton(onClick = { }) {
                 Text("Закрыть")
             }
         }
