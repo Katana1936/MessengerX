@@ -6,14 +6,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 
+/**
+ * Компонент для запроса runtime-разрешений с Material3 диалогом.
+ */
 @Composable
 fun PermissionsHandler(
     permissions: List<String>,
@@ -23,6 +22,8 @@ fun PermissionsHandler(
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
+
+    // Храним состояние каждого разрешения
     val permissionStatus = permissions.associateWith { permission ->
         remember {
             mutableStateOf(
@@ -33,7 +34,10 @@ fun PermissionsHandler(
             )
         }
     }
+
     val allPermissionsGranted = permissionStatus.values.all { it.value }
+
+    // Запрос разрешений через системный контракт
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
@@ -46,6 +50,7 @@ fun PermissionsHandler(
             onPermissionsDenied?.invoke()
         }
     }
+
     if (allPermissionsGranted) {
         content()
     } else {
@@ -71,6 +76,9 @@ fun PermissionsHandler(
     }
 }
 
+/**
+ * Отдельный диалог для обработки отказа в разрешениях.
+ */
 @Composable
 fun PermissionDeniedDialog(
     rationaleText: String = "Для использования приложения необходимы разрешения.",
