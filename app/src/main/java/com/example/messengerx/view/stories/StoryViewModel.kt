@@ -4,24 +4,35 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.messengerx.api.ApiService
-import com.google.firebase.storage.FirebaseStorage
+import com.example.messengerx.api.StoryDataStoreManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class StoryViewModel(private val apiService: ApiService) : ViewModel() {
+class StoryViewModel(
+    private val apiService: ApiService,
+    private val storyDataStoreManager: StoryDataStoreManager
+) : ViewModel() {
 
     private val _stories = MutableStateFlow<List<ApiService.Story>>(emptyList())
     val stories: StateFlow<List<ApiService.Story>> = _stories
 
-    fun fetchStories(userId: String) {
+    init {
+        loadLocalStories()
+    }
+
+    private fun loadLocalStories() {
         viewModelScope.launch {
-            try {
-                val storyList = apiService.getUserStories(userId).values.toList()
-                _stories.value = storyList
-            } catch (e: Exception) {
-                println("Ошибка получения историй: ${e.localizedMessage}")
+            storyDataStoreManager.stories.collect { localStories ->
+                _stories.value = localStories
             }
+        }
+    }
+
+    fun addLocalStory(story: ApiService.Story) {
+        viewModelScope.launch {
+            val updatedStories = _stories.value + story
+            storyDataStoreManager.saveStories(updatedStories)
         }
     }
 
@@ -31,31 +42,14 @@ class StoryViewModel(private val apiService: ApiService) : ViewModel() {
         onSuccess: (String) -> Unit,
         onFailure: (String) -> Unit
     ) {
-        val storageRef = FirebaseStorage.getInstance().reference
-        val storyRef = storageRef.child("stories/$userId/${System.currentTimeMillis()}.jpg")
-
-        storyRef.putFile(imageUri)
-            .addOnSuccessListener {
-                storyRef.downloadUrl.addOnSuccessListener { uri ->
-                    onSuccess(uri.toString())
-                }.addOnFailureListener { e ->
-                    onFailure("Ошибка получения URL: ${e.message}")
-                }
-            }
-            .addOnFailureListener { e ->
-                onFailure("Ошибка загрузки файла: ${e.message}")
-            }
+        // Здесь просто сохраняем локально URI как строку
+        onSuccess(imageUri.toString())
     }
 
+    // Сеть нам пока не нужна
     fun addStory(userId: String, story: ApiService.Story, onComplete: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            try {
-                apiService.addStory(userId, story)
-                onComplete(true)
-            } catch (e: Exception) {
-                println("Ошибка добавления истории: ${e.localizedMessage}")
-                onComplete(false)
-            }
-        }
+        addLocalStory(story)
+        onComplete(true)
     }
 }
+
