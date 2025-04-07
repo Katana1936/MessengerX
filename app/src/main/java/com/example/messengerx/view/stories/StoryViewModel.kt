@@ -35,18 +35,14 @@ class StoryViewModel(
             storyDataStoreManager.saveStories(updatedStories)
         }
     }
-
     fun uploadStoryImage(
         userId: String,
         imageUri: Uri,
         onSuccess: (String) -> Unit,
         onFailure: (String) -> Unit
     ) {
-        // Здесь просто сохраняем локально URI как строку
         onSuccess(imageUri.toString())
     }
-
-    // Сеть нам пока не нужна
     fun addStory(userId: String, story: ApiService.Story, onComplete: (Boolean) -> Unit) {
         addLocalStory(story)
         onComplete(true)

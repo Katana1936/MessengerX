@@ -10,9 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 
-/**
- * Компонент для запроса runtime-разрешений с Material3 диалогом.
- */
+
 @Composable
 fun PermissionsHandler(
     permissions: List<String>,
@@ -23,7 +21,6 @@ fun PermissionsHandler(
 ) {
     val context = LocalContext.current
 
-    // Храним состояние каждого разрешения
     val permissionStatus = permissions.associateWith { permission ->
         remember {
             mutableStateOf(
@@ -37,7 +34,6 @@ fun PermissionsHandler(
 
     val allPermissionsGranted = permissionStatus.values.all { it.value }
 
-    // Запрос разрешений через системный контракт
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
@@ -76,9 +72,6 @@ fun PermissionsHandler(
     }
 }
 
-/**
- * Отдельный диалог для обработки отказа в разрешениях.
- */
 @Composable
 fun PermissionDeniedDialog(
     rationaleText: String = "Для использования приложения необходимы разрешения.",
