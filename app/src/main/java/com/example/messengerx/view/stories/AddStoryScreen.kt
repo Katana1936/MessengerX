@@ -1,5 +1,6 @@
 package com.example.messengerx.view.stories
 
+import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -9,9 +10,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.messengerx.api.ApiService
+import androidx.core.content.FileProvider
+import com.example.messengerx.BuildConfig
 import java.io.File
-import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,13 +23,13 @@ fun AddStoryScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var photoUri by remember { mutableStateOf<Uri?>(null) }
 
     val takePictureLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { success ->
-        imageUri?.takeIf { success }?.let { uri ->
-            uploadStory(viewModel, userId, uri, onStoryPublished)
+        if (success && photoUri != null) {
+            uploadStory(viewModel, userId, photoUri!!, onStoryPublished)
         }
     }
 
@@ -43,7 +44,7 @@ fun AddStoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Добавить историю") },
+                title = { Text("Добавить историю") }
             )
         }
     ) { padding ->
@@ -53,25 +54,23 @@ fun AddStoryScreen(
                 .padding(padding)
                 .padding(16.dp)
         ) {
-            StoryActionButton(text = "Сделать фото") {
-                val file = File(
-                    context.getExternalFilesDir(null),
-                    "story_${System.currentTimeMillis()}.jpg"
-                )
-                val uri = Uri.fromFile(file)
-                imageUri = uri
-                takePictureLauncher.launch(uri)
+            StoryActionButton("Сделать фото") {
+                val uri = createImageUri(context)
+                if (uri != null) {
+                    photoUri = uri
+                    takePictureLauncher.launch(uri)
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            StoryActionButton(text = "Выбрать из галереи") {
+            StoryActionButton("Выбрать из галереи") {
                 pickImageLauncher.launch("image/*")
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            StoryActionButton(text = "Отмена", onClick = onBack)
+            StoryActionButton("Отмена", onClick = onBack)
         }
     }
 }
@@ -86,6 +85,22 @@ private fun StoryActionButton(text: String, onClick: () -> Unit) {
     }
 }
 
+private fun createImageUri(context: Context): Uri? {
+    return try {
+        val imageFile = File(
+            context.getExternalFilesDir(null),
+            "story_${System.currentTimeMillis()}.jpg"
+        )
+        FileProvider.getUriForFile(
+            context,
+            "${BuildConfig.APPLICATION_ID}.provider",
+            imageFile
+        )
+    } catch (e: Exception) {
+        null
+    }
+}
+
 private fun uploadStory(
     viewModel: StoryViewModel,
     userId: String,
@@ -95,19 +110,7 @@ private fun uploadStory(
     viewModel.uploadStoryImage(
         userId = userId,
         imageUri = imageUri,
-        onSuccess = { imageUrl ->
-            val story = ApiService.Story(
-                id = System.currentTimeMillis().toString(),
-                imageUrl = imageUrl,
-                timestamp = System.currentTimeMillis(),
-                userId = userId
-            )
-            viewModel.addStory(userId, story) { isSuccess ->
-                if (isSuccess) onSuccess()
-            }
-        },
-        onFailure = { errorMessage ->
-            Log.e("AddStory", "Ошибка загрузки: $errorMessage")
-        }
+        onSuccess = { viewModel.addStory(userId, onSuccess) },
+        onFailure = { Log.e("AddStory", "Ошибка загрузки: $it") }
     )
 }
